@@ -3,6 +3,9 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "await-notify": "^1.0.1",
+    "queue-typescript": "^1.0.1",
+    "uuid": "^9.0.0",
     "web3": "^1.8.0",
     "web3-eth": "^1.8.0",
     "web3-providers-ws": "^1.8.0"

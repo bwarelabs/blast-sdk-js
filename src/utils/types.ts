@@ -1,3 +1,6 @@
+import Web3 from "web3";
+const {Subject} = require('await-notify');
+
 /** @internal */
 export type ConnectionType = 'https' | 'wss';
 
@@ -5,6 +8,7 @@ export type ConnectionType = 'https' | 'wss';
 export interface BlastConfig {
     projectId: string;
     network: BlastNetwork;
+    plan: BlastSubscriptionPlan;
 }
 
 /** @public */
@@ -52,4 +56,30 @@ export enum NotSupportedNetworks {
     ELROND_MAINNET_API = 'elrond-api',
     ELROND_DEVNET_API = 'elrond-api-devnet',
     ELROND_MAINNET_GATEWAY = 'elrond-mainnet',
+}
+
+/** @public */
+export enum BlastSubscriptionPlan {
+    Free = 40,
+    Developer = 100,
+    Startup = 400,
+}
+
+/** @internal */
+export interface Request {
+    originalFunction: any;
+    provider: Web3;
+    arguments: IArguments;
+    requestId: string;
+}
+
+/** @internal */
+interface RequestData {
+    event: typeof Subject;
+    response: any;
+}
+
+/** @internal */
+export interface HashMap {
+    [key: string]: RequestData;
 }
