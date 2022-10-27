@@ -1,0 +1,25 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+
+    steps:
+    - name: Run Tests ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+      env:
+        PROJECT_ID_CUSTOM_PLAN_100: ${{ secrets.PROJECT_ID_CUSTOM_PLAN_100 }}
+    - run: npm install
+    - run: npm test
