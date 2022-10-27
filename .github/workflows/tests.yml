@@ -16,8 +16,6 @@ jobs:
         node-version: [14.x, 16.x, 18.x]
 
     steps:
-    - uses: actions/checkout@v3
-    
     - name: Run Tests ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
