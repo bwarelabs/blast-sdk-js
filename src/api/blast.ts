@@ -3,7 +3,7 @@ import {getBlastUrl} from "../utils/utils";
 import {BlastConfig, HashMap, NotSupportedNetworks} from "../utils/types";
 import {Eth} from "web3-eth";
 import {RequestsHandler} from "./requests-handler";
-const {v4} = require('uuid');
+import {v4 as uuidv4} from "uuid";
 const {Subject} = require('await-notify');
 
 /** @public */
@@ -35,7 +35,7 @@ export class Blast {
 
         // @ts-ignore because it believes that func can be a property and not a function of the Eth class
         provider.eth[func] = async function () {
-            const requestId = v4();
+            const requestId = uuidv4();
             weakThis.requestEvent[requestId] = {event: new Subject(), response: undefined};
 
             weakThis.requestsHandler.enqueue({originalFunction, provider, arguments, requestId});
@@ -44,6 +44,15 @@ export class Blast {
             await weakThis.requestEvent[requestId].event.wait();
             return weakThis.requestEvent[requestId].response;
         };
+
+        // the functions have other properties too, like |web3.eth.getBalance()| also
+        // has |web3.eth.getBalance.request| which we need to keep from the original
+        // function
+        for (const property of Object.getOwnPropertyNames(originalFunction)) {
+            if (property !== 'name' && property !== 'length' && property !== 'prototype') {
+                provider.eth[func][property] = originalFunction[property];
+            }
+        }
     }
 
     /** @internal */
