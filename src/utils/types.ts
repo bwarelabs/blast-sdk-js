@@ -8,7 +8,8 @@ export type ConnectionType = 'https' | 'wss';
 export interface BlastConfig {
     projectId: string;
     network: BlastNetwork;
-    plan: BlastSubscriptionPlan;
+    // we accept other numbers for custom plans
+    plan: BlastSubscriptionPlan | number;
 }
 
 /** @public */

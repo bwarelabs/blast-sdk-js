@@ -4,7 +4,7 @@ import {NOT_STARTED, WINDOW_LENGTH_IN_MILLISECONDS} from "../utils/utils";
 
 /** @internal */
 export class RequestsHandler {
-    private readonly plan: BlastSubscriptionPlan;
+    private readonly plan: BlastSubscriptionPlan | number;
     private readonly queue: Queue<Request>;
     requestEvent: HashMap;
     private queueAlreadyRunning: boolean;
@@ -14,7 +14,7 @@ export class RequestsHandler {
     private previousWindowNumberOfRequests: number;
 
     /** @internal */
-    constructor(plan: BlastSubscriptionPlan, requestEvent: HashMap) {
+    constructor(plan: BlastSubscriptionPlan | number, requestEvent: HashMap) {
         this.plan = plan;
         this.requestEvent = requestEvent;
 
@@ -44,6 +44,7 @@ export class RequestsHandler {
             const request: Request = this.queue.dequeue();
             request.originalFunction.apply(request.provider.eth, request.arguments).then((response: any) => {
                 this.requestEvent[request.requestId].response = response;
+            }).finally(() => {
                 this.requestEvent[request.requestId].event.notify();
             });
         }

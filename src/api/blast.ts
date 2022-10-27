@@ -1,6 +1,6 @@
 import Web3 from "web3";
-import {getBlastUrl} from "../utils/utils";
-import {BlastConfig, HashMap, NotSupportedNetworks} from "../utils/types";
+import {getBlastUrl, isNetworkSupported, NOT_SUPPORTED_ERROR} from "../utils/utils";
+import {BlastConfig, HashMap} from "../utils/types";
 import {Eth} from "web3-eth";
 import {RequestsHandler} from "./requests-handler";
 import {v4 as uuidv4} from "uuid";
@@ -15,8 +15,8 @@ export class Blast {
 
     /** @public */
     constructor(config: BlastConfig) {
-        if (Object.values(NotSupportedNetworks).includes(config.network as unknown as NotSupportedNetworks)) {
-            throw new Error('Provided network is not supported');
+        if (!isNetworkSupported(config.network)) {
+            throw new Error(NOT_SUPPORTED_ERROR);
         }
         this.apiProvider = new Web3(getBlastUrl(config.network, config.projectId, 'https'));
         this.wsProvider = new Web3(getBlastUrl(config.network, config.projectId, 'wss'));
