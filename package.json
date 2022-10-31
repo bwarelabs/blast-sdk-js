@@ -6,7 +6,7 @@
   },
   "scripts": {
     "custom-test": "ts-node-esm -r dotenv/config test.ts",
-    "test": "mocha -r dotenv/config"
+    "test": "mocha -r dotenv/config --exit"
   },
   "dependencies": {
     "@types/chai": "^4.3.3",
