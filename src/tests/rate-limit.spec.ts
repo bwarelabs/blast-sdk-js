@@ -17,6 +17,9 @@ describe('Test automatic back-off when rate limit is reached', () => {
         chai.should();
     });
 
+    // wait for the sliding window to clear up
+    beforeEach(() => new Promise((resolve) => setTimeout(resolve, 2000)));
+
     it('test rate limit for custom 100 plan', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,

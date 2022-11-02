@@ -76,7 +76,7 @@ export class RequestsHandler {
         const scale: number = (WINDOW_LENGTH_IN_MILLISECONDS - currentWindowDuration) / WINDOW_LENGTH_IN_MILLISECONDS;
 
         if (scale * this.previousWindowNumberOfRequests + (this.currentWindowNumberOfRequests + 1) > this.plan) {
-            await new Promise(resolve => setTimeout(resolve, this.timeToWaitForNewRequest()));
+            await new Promise(resolve => setTimeout(resolve, this.timeToWaitForNewRequest(currentTime)));
 
             // we moved to a different window, so we need to do the processing again
             await this.handleRateLimit();
@@ -87,15 +87,15 @@ export class RequestsHandler {
     }
 
     /** @internal */
-    private timeToWaitForNewRequest(): number {
+    private timeToWaitForNewRequest(currentTime: number): number {
         if (this.previousWindowNumberOfRequests !== 0) {
             return WINDOW_LENGTH_IN_MILLISECONDS
                 - (this.plan - (this.currentWindowNumberOfRequests + 1))
                 / this.previousWindowNumberOfRequests * WINDOW_LENGTH_IN_MILLISECONDS
                 + this.currentWindowStartTime
-                - Date.now();
+                - currentTime;
         } else {
-            return WINDOW_LENGTH_IN_MILLISECONDS + this.currentWindowStartTime + 1 - Date.now();
+            return WINDOW_LENGTH_IN_MILLISECONDS + this.currentWindowStartTime + 1 - currentTime;
         }
     }
 }
