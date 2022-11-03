@@ -1,6 +1,6 @@
 import {BlastSubscriptionPlan, HashMap, Request} from "../utils/types";
 import {Queue} from "queue-typescript";
-import {NOT_STARTED, WINDOW_LENGTH_IN_MILLISECONDS} from "../utils/utils";
+import {NOT_STARTED, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS} from "../utils/utils";
 
 /** @internal */
 export class RequestsHandler {
@@ -32,6 +32,17 @@ export class RequestsHandler {
     }
 
     /** @internal */
+    handleErrors(request: Request, err: any) {
+        if (err.message === RATE_LIMIT_ERROR) {
+            this.enqueue(request);
+        } else {
+            console.error(err);
+            request.callback(err, undefined);
+            this.requestEvent[request.requestId].event.notify();
+        }
+    }
+
+    /** @internal */
     async resolveRequestQueue() {
         if (this.queueAlreadyRunning) {
             return;
@@ -43,10 +54,11 @@ export class RequestsHandler {
 
             const request: Request = this.queue.dequeue();
             request.originalFunction.apply(request.provider.eth, request.arguments).then((response: any) => {
+                request.callback(null, response);
                 this.requestEvent[request.requestId].response = response;
-            }).finally(() => {
                 this.requestEvent[request.requestId].event.notify();
-            });
+            })
+            .catch((err: any) => this.handleErrors(request, err));
         }
 
         this.queueAlreadyRunning = false;
@@ -76,7 +88,7 @@ export class RequestsHandler {
         const scale: number = (WINDOW_LENGTH_IN_MILLISECONDS - currentWindowDuration) / WINDOW_LENGTH_IN_MILLISECONDS;
 
         if (scale * this.previousWindowNumberOfRequests + (this.currentWindowNumberOfRequests + 1) > this.plan) {
-            await new Promise(resolve => setTimeout(resolve, this.timeToWaitForNewRequest(currentTime)));
+            await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(currentTime))));
 
             // we moved to a different window, so we need to do the processing again
             await this.handleRateLimit();

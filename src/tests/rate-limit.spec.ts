@@ -27,5 +27,5 @@ describe('Test automatic back-off when rate limit is reached', () => {
             plan: 100,
         });
         return Promise.all(createRequestArray(blast, 500));
-    }).timeout(10000);
+    }).timeout(15000);
 });

@@ -38,7 +38,24 @@ export class Blast {
             const requestId = uuidv4();
             weakThis.requestEvent[requestId] = {event: new Subject(), response: undefined};
 
-            weakThis.requestsHandler.enqueue({originalFunction, provider, arguments, requestId});
+            let argumentsWithoutCallback = Array.from(arguments);
+            let callback = () => {};
+
+            if (arguments.length > 0) {
+                const callbackFromArguments = arguments[arguments.length - 1];
+                if (typeof callbackFromArguments === 'function') {
+                    argumentsWithoutCallback = Array.from(arguments).slice(0, -1);
+                    callback = callbackFromArguments;
+                }
+            }
+
+            weakThis.requestsHandler.enqueue({
+                originalFunction,
+                provider,
+                arguments: argumentsWithoutCallback,
+                callback,
+                requestId,
+            });
             weakThis.requestsHandler.resolveRequestQueue().then();
 
             await weakThis.requestEvent[requestId].event.wait();
