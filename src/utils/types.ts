@@ -75,7 +75,8 @@ export enum BlastSubscriptionPlan {
 export interface Request {
     originalFunction: any;
     provider: Web3;
-    arguments: IArguments;
+    arguments: any[];
+    callback: any;
     requestId: string;
 }
 

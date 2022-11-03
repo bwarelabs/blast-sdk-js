@@ -1,0 +1,29 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Create a .env file
+      uses: DeveloperRic/action-create-env@v1.0.4
+      with:
+        full_text: |
+          PROJECT_ID_CUSTOM_PLAN_100=${{ secrets.PROJECT_ID_CUSTOM_PLAN_100 }}
+    - name: Run Tests ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm test
