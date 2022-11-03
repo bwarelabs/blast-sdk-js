@@ -50,22 +50,38 @@ export class RequestsHandler {
         this.queueAlreadyRunning = true;
 
         while (this.queue.length > 0) {
-            await this.handleRateLimit();
-
             const request: Request = this.queue.dequeue();
-            request.originalFunction.apply(request.provider.eth, request.arguments).then((response: any) => {
-                request.callback(null, response);
-                this.requestEvent[request.requestId].response = response;
+
+            if (request.parent.requests !== undefined) {
+                // if parent is BatchRequest
+                const numberOfSubRequests = request.parent.requests.length;
+                if (numberOfSubRequests > this.plan) {
+                    console.error(`The number of sub requests (${numberOfSubRequests}) within one batch request exceeds the plan (${this.plan}).`);
+                }
+
+                await this.handleRateLimit(numberOfSubRequests);
+
+                request.originalFunction.apply(request.parent, request.arguments);
                 this.requestEvent[request.requestId].event.notify();
-            })
-            .catch((err: any) => this.handleErrors(request, err));
+            } else {
+                // if parent is Eth
+                await this.handleRateLimit(1);
+
+                request.originalFunction.apply(request.parent, request.arguments)
+                    .then((response: any) => {
+                        request.callback(null, response);
+                        this.requestEvent[request.requestId].response = response;
+                        this.requestEvent[request.requestId].event.notify();
+                    })
+                    .catch((err: any) => this.handleErrors(request, err));
+            }
         }
 
         this.queueAlreadyRunning = false;
     }
 
     /** @internal */
-    private async handleRateLimit() {
+    private async handleRateLimit(numberOfRequests: number) {
         const currentTime: number = Date.now();
         if (this.currentWindowStartTime == NOT_STARTED) {
             this.currentWindowStartTime = currentTime;
@@ -87,22 +103,23 @@ export class RequestsHandler {
 
         const scale: number = (WINDOW_LENGTH_IN_MILLISECONDS - currentWindowDuration) / WINDOW_LENGTH_IN_MILLISECONDS;
 
-        if (scale * this.previousWindowNumberOfRequests + (this.currentWindowNumberOfRequests + 1) > this.plan) {
-            await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(currentTime))));
+        if (scale * this.previousWindowNumberOfRequests +
+            (this.currentWindowNumberOfRequests + numberOfRequests) > this.plan) {
+                await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(numberOfRequests, currentTime))));
 
-            // we moved to a different window, so we need to do the processing again
-            await this.handleRateLimit();
-            return;
-        }
+                // we moved to a different window, so we need to do the processing again
+                await this.handleRateLimit(numberOfRequests);
+                return;
+            }
         // add current request to the number of requests
-        ++this.currentWindowNumberOfRequests;
+        this.currentWindowNumberOfRequests += numberOfRequests;
     }
 
     /** @internal */
-    private timeToWaitForNewRequest(currentTime: number): number {
+    private timeToWaitForNewRequest(numberOfRequests: number, currentTime: number): number {
         if (this.previousWindowNumberOfRequests !== 0) {
             return WINDOW_LENGTH_IN_MILLISECONDS
-                - (this.plan - (this.currentWindowNumberOfRequests + 1))
+                - (this.plan - (this.currentWindowNumberOfRequests + numberOfRequests))
                 / this.previousWindowNumberOfRequests * WINDOW_LENGTH_IN_MILLISECONDS
                 + this.currentWindowStartTime
                 - currentTime;

@@ -29,12 +29,9 @@ export class Blast {
     }
 
     /** @internal */
-    private wrapFunctionToHandleRequestLimit(provider: Web3, func: keyof Eth) {
-        const originalFunction = provider.eth[func];
+    private overrideFunctionToHandleRequestLimit(parent: any, originalFunction: any) {
         const weakThis = this;
-
-        // @ts-ignore because it believes that func can be a property and not a function of the Eth class
-        provider.eth[func] = async function () {
+        return async function () {
             const requestId = uuidv4();
             weakThis.requestEvent[requestId] = {event: new Subject(), response: undefined};
 
@@ -51,7 +48,7 @@ export class Blast {
 
             weakThis.requestsHandler.enqueue({
                 originalFunction,
-                provider,
+                parent,
                 arguments: argumentsWithoutCallback,
                 callback,
                 requestId,
@@ -60,7 +57,15 @@ export class Blast {
 
             await weakThis.requestEvent[requestId].event.wait();
             return weakThis.requestEvent[requestId].response;
-        };
+        }
+    }
+
+    /** @internal */
+    private wrapFunctionToHandleRequestLimit(provider: Web3, func: keyof Eth) {
+        const originalFunction = provider.eth[func];
+
+        // @ts-ignore because it believes that func can be a property and not a function of the Eth class
+        provider.eth[func] = this.overrideFunctionToHandleRequestLimit(provider.eth, originalFunction);
 
         // the functions have other properties too, like |web3.eth.getBalance()| also
         // has |web3.eth.getBalance.request| which we need to keep from the original
@@ -82,5 +87,19 @@ export class Blast {
                 this.wrapFunctionToHandleRequestLimit(provider, func);
             }
         }
+
+        const originalBatchRequest = provider.BatchRequest;
+        const weakThis = this;
+
+        // @ts-ignore because doesn't like this override
+        provider.BatchRequest = function () {
+            const batch = new originalBatchRequest();
+            const originalExecute = batch.execute;
+
+            batch.execute = function () {
+                weakThis.overrideFunctionToHandleRequestLimit(batch, originalExecute)();
+            };
+            return batch;
+        };
     }
 }
