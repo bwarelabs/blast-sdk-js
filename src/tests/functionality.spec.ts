@@ -15,10 +15,6 @@ describe('Test networks', () => {
 
     it('supported networks should work both on https and wss while not supported networks should not', async () => {
         for (const network of Object.values(BlastNetwork)) {
-            // there are issues with websockets on Evmos
-            if (network === BlastNetwork.EVMOS_MAINNET) {
-                continue;
-            }
             const config: BlastConfig = {
                 projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
                 network,

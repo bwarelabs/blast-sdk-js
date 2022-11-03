@@ -18,6 +18,7 @@ export enum BlastNetwork {
     ETH_SEPOLIA = 'eth-sepolia',
     ETH_GOERLI = 'eth-goerli',
     BSC_TESTNET = 'bsc-testnet',
+    BSC_MAINNET = 'bsc-mainnet',
     MOONBEAM_MAINNET = 'moonbeam',
     MOONRIVER_MAINNET = 'moonriver',
     MOONBASE_ALPHA = 'moonbase-alpha',
@@ -44,6 +45,8 @@ export enum BlastNetwork {
     ELROND_MAINNET_API = 'elrond-api',
     ELROND_DEVNET_API = 'elrond-api-devnet',
     ELROND_MAINNET_GATEWAY = 'elrond-mainnet',
+    APTOS_MAINNET = 'aptos-mainnet',
+    APTOS_TESTNET = 'aptos-testnet',
 }
 
 // make sure that all the enum entries below also exist in the |BlastNetwork| enum above
@@ -57,6 +60,8 @@ export enum NotSupportedNetworks {
     ELROND_MAINNET_API = 'elrond-api',
     ELROND_DEVNET_API = 'elrond-api-devnet',
     ELROND_MAINNET_GATEWAY = 'elrond-mainnet',
+    APTOS_MAINNET = 'aptos-mainnet',
+    APTOS_TESTNET = 'aptos-testnet',
 }
 
 /** @public */
