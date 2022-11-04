@@ -10,6 +10,7 @@ export interface BlastConfig {
     network: BlastNetwork;
     // we accept other numbers for custom plans
     plan: BlastSubscriptionPlan | number;
+    handleRateLimit?: boolean;
 }
 
 /** @public */

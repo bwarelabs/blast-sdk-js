@@ -24,8 +24,11 @@ export class Blast {
         this.requestEvent = {};
         this.requestsHandler = new RequestsHandler(config.plan, this.requestEvent);
 
-        this.wrapProviderToHandleRequestLimit(this.apiProvider);
-        this.wrapProviderToHandleRequestLimit(this.wsProvider);
+        // can be true or undefined
+        if (config.handleRateLimit !== false) {
+            this.wrapProviderToHandleRequestLimit(this.apiProvider);
+            this.wrapProviderToHandleRequestLimit(this.wsProvider);
+        }
     }
 
     /** @internal */
