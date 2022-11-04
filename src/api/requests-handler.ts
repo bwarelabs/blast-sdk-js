@@ -29,6 +29,7 @@ export class RequestsHandler {
     /** @internal */
     enqueue(request: Request) {
         this.queue.enqueue(request);
+        this.resolveRequestQueue().then();
     }
 
     /** @internal */

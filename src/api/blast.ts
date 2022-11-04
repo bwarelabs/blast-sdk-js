@@ -53,7 +53,6 @@ export class Blast {
                 callback,
                 requestId,
             });
-            weakThis.requestsHandler.resolveRequestQueue().then();
 
             await weakThis.requestEvent[requestId].event.wait();
             return weakThis.requestEvent[requestId].response;
