@@ -1,6 +1,7 @@
 {
   "name": "@bwarelabs/blast-sdk-js",
-  "version": "1.0.2",
+  "version": "1.0.4",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/bwarelabs/blast-sdk-js.git"
@@ -12,7 +13,8 @@
   },
   "scripts": {
     "custom-test": "ts-node-esm -r dotenv/config test.ts",
-    "test": "mocha -r dotenv/config --exit --timeout 3000"
+    "test": "mocha -r dotenv/config --exit --timeout 3000",
+    "build": "rm -rf dist && tsc"
   },
   "dependencies": {
     "@types/chai": "^4.3.3",
