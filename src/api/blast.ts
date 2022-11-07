@@ -1,6 +1,6 @@
 import Web3 from "web3";
 import {getBlastUrl, isNetworkSupported, NOT_SUPPORTED_ERROR} from "../utils/utils";
-import {BlastConfig, HashMap} from "../utils/types";
+import {BlastConfig, HashMap, RequestData} from "../utils/types";
 import {Eth} from "web3-eth";
 import {RequestsHandler} from "./requests-handler";
 import {v4 as uuidv4} from "uuid";
@@ -10,8 +10,8 @@ const {Subject} = require('await-notify');
 export class Blast {
     readonly apiProvider: Web3;
     readonly wsProvider: Web3;
-    requestEvent: HashMap;
-    requestsHandler: RequestsHandler;
+    private readonly requestEvent: HashMap<RequestData>;
+    private requestsHandler: RequestsHandler;
 
     /** @public */
     constructor(config: BlastConfig) {
@@ -46,16 +46,32 @@ export class Blast {
                 }
             }
 
-            weakThis.requestsHandler.enqueue({
+            const request = {
                 originalFunction,
                 parent,
                 arguments: argumentsWithoutCallback,
                 callback,
                 requestId,
-            });
+            };
 
-            await weakThis.requestEvent[requestId].event.wait();
-            return weakThis.requestEvent[requestId].response;
+            if (parent.requests !== undefined) {
+                for (const subRequest of parent.requests) {
+                    const originalCallback = subRequest.callback;
+                    subRequest.callback = async function (err: any, res: any) {
+                        if (weakThis.requestsHandler.handleErrors(request, err, true)) {
+                            originalCallback(err, res);
+                        }
+                    }
+                }
+            }
+
+            weakThis.requestsHandler.enqueue(request);
+
+            if (parent.requests === undefined) {
+                // parent is Eth, not BatchRequest
+                await weakThis.requestEvent[requestId].event.wait();
+                return weakThis.requestEvent[requestId].response;
+            }
         }
     }
 
@@ -90,7 +106,7 @@ export class Blast {
         const originalBatchRequest = provider.BatchRequest;
         const weakThis = this;
 
-        // @ts-ignore because doesn't like this override
+        // @ts-ignore because ts doesn't like this override
         provider.BatchRequest = function () {
             const batch = new originalBatchRequest();
             const originalExecute = batch.execute;

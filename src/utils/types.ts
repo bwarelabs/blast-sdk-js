@@ -81,12 +81,12 @@ export interface Request {
 }
 
 /** @internal */
-interface RequestData {
+export interface RequestData {
     event: typeof Subject;
     response: any;
 }
 
 /** @internal */
-export interface HashMap {
-    [key: string]: RequestData;
+export interface HashMap<T> {
+    [key: string]: T;
 }
