@@ -3,15 +3,22 @@ import * as chai from "chai";
 import {Blast} from "../api/blast";
 import {isNetworkSupported, NOT_SUPPORTED_ERROR} from "../utils/utils";
 import chaiAsPromised from "chai-as-promised";
+const {Subject} = require('await-notify');
 
-describe('Test networks', () => {
+describe('Test functionality', () => {
     let expect: Chai.ExpectStatic;
+    let originalProcessOn: any;
 
     before(() => {
         expect = chai.expect;
         chai.use(chaiAsPromised);
         chai.should();
+        originalProcessOn = process.on;
     });
+
+    // wait for the sliding window to clear up
+    beforeEach(() => new Promise((resolve) => setTimeout(resolve, 2000)));
+    afterEach(() => {process.on = originalProcessOn});
 
     it('supported networks should work both on https and wss while not supported networks should not', async () => {
         for (const network of Object.values(BlastNetwork)) {
@@ -48,18 +55,45 @@ describe('Test networks', () => {
         expect(result.gas).to.be.a('number');
     });
 
-    it('batch requests should work', (done) => {
+    it('batch requests should work', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
             plan: 100,
         });
 
+        const batch = new blast.apiProvider.BatchRequest();
+
+        const subjects = [];
+        for (let i = 0; i < 50; i++) {
+            const subject = new Subject();
+            // @ts-ignore because typescript doesn't see the |request| property
+            batch.add(blast.apiProvider.eth.getGasPrice.request(() => subject.notify()));
+            subjects.push(subject);
+        }
+        batch.execute();
+
+        return Promise.all(subjects.map(subject => subject.wait()));
+    });
+
+    it('batch request with more requests than the plan should not work', (done) => {
+        const blast: Blast = new Blast({
+            projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
+            network: BlastNetwork.ETH_MAINNET,
+            plan: 100,
+        });
+
+        // @ts-ignore because ts doesn't like this type of override
+        process.on = ('uncaughtException', function () {
+            done();
+        });
 
         const batch = new blast.apiProvider.BatchRequest();
 
-        // @ts-ignore because typescript doesn't see the |request| property
-        batch.add(blast.apiProvider.eth.getGasPrice.request(done()));
+        for (let i = 0; i < 101; i++) {
+            // @ts-ignore because typescript doesn't see the |request| property
+            batch.add(blast.apiProvider.eth.getGasPrice.request());
+        }
 
         batch.execute();
     });
