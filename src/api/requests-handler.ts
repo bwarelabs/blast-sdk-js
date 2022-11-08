@@ -1,4 +1,4 @@
-import {BlastSubscriptionPlan, HashMap, Request} from "../utils/types";
+import {BlastSubscriptionPlan, HashMap, Request, RequestData} from "../utils/types";
 import {Queue} from "queue-typescript";
 import {NOT_STARTED, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS} from "../utils/utils";
 
@@ -6,7 +6,8 @@ import {NOT_STARTED, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS} from "../u
 export class RequestsHandler {
     private readonly plan: BlastSubscriptionPlan | number;
     private readonly queue: Queue<Request>;
-    requestEvent: HashMap;
+    private requestEvent: HashMap<RequestData>;
+    private readonly isRequestQueued: HashMap<boolean>;
     private queueAlreadyRunning: boolean;
 
     private currentWindowStartTime: number;
@@ -14,11 +15,12 @@ export class RequestsHandler {
     private previousWindowNumberOfRequests: number;
 
     /** @internal */
-    constructor(plan: BlastSubscriptionPlan | number, requestEvent: HashMap) {
+    constructor(plan: BlastSubscriptionPlan | number, requestEvent: HashMap<RequestData>) {
         this.plan = plan;
         this.requestEvent = requestEvent;
 
         this.queue = new Queue<Request>();
+        this.isRequestQueued = {};
         this.queueAlreadyRunning = false;
 
         this.currentWindowStartTime = NOT_STARTED;
@@ -28,18 +30,29 @@ export class RequestsHandler {
 
     /** @internal */
     enqueue(request: Request) {
-        this.queue.enqueue(request);
+        if (!this.isRequestQueued[request.requestId]) {
+            this.queue.enqueue(request);
+            this.isRequestQueued[request.requestId] = true;
+            this.resolveRequestQueue().then();
+        }
     }
 
     /** @internal */
-    handleErrors(request: Request, err: any) {
-        if (err.message === RATE_LIMIT_ERROR) {
+    handleErrors(request: Request, err: any, isBatch: boolean): boolean {
+        // the return value is only used by requests in batches to determine
+        // whether they should call their callbacks or not yet
+        let returnValue: boolean = true;
+
+        if (err?.message === RATE_LIMIT_ERROR) {
             this.enqueue(request);
-        } else {
+            returnValue = false;
+        } else if (!isBatch) {
             console.error(err);
             request.callback(err, undefined);
             this.requestEvent[request.requestId].event.notify();
         }
+
+        return returnValue;
     }
 
     /** @internal */
@@ -50,22 +63,43 @@ export class RequestsHandler {
         this.queueAlreadyRunning = true;
 
         while (this.queue.length > 0) {
-            await this.handleRateLimit();
-
             const request: Request = this.queue.dequeue();
-            request.originalFunction.apply(request.provider.eth, request.arguments).then((response: any) => {
-                request.callback(null, response);
-                this.requestEvent[request.requestId].response = response;
+            let numberOfSubRequests: number = 1;
+
+            if (request.parent.requests !== undefined) {
+                // if parent is BatchRequest
+                numberOfSubRequests = request.parent.requests.length;
+                if (numberOfSubRequests > this.plan) {
+                    throw new Error(`The number of sub requests (${numberOfSubRequests}) within one batch request exceeds the plan (${this.plan}).`);
+                }
+            }
+
+            await this.handleRateLimit(numberOfSubRequests);
+            this.isRequestQueued[request.requestId] = false;
+
+            if (request.parent.requests !== undefined) {
+                // if parent is BatchRequest
+
+                request.originalFunction.apply(request.parent, request.arguments);
                 this.requestEvent[request.requestId].event.notify();
-            })
-            .catch((err: any) => this.handleErrors(request, err));
+            } else {
+                // if parent is Eth
+
+                request.originalFunction.apply(request.parent, request.arguments)
+                    .then((response: any) => {
+                        request.callback(null, response);
+                        this.requestEvent[request.requestId].response = response;
+                        this.requestEvent[request.requestId].event.notify();
+                    })
+                    .catch((err: any) => this.handleErrors(request, err, false));
+            }
         }
 
         this.queueAlreadyRunning = false;
     }
 
     /** @internal */
-    private async handleRateLimit() {
+    private async handleRateLimit(numberOfRequests: number) {
         const currentTime: number = Date.now();
         if (this.currentWindowStartTime == NOT_STARTED) {
             this.currentWindowStartTime = currentTime;
@@ -87,22 +121,23 @@ export class RequestsHandler {
 
         const scale: number = (WINDOW_LENGTH_IN_MILLISECONDS - currentWindowDuration) / WINDOW_LENGTH_IN_MILLISECONDS;
 
-        if (scale * this.previousWindowNumberOfRequests + (this.currentWindowNumberOfRequests + 1) > this.plan) {
-            await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(currentTime))));
+        if (scale * this.previousWindowNumberOfRequests +
+            (this.currentWindowNumberOfRequests + numberOfRequests) > this.plan) {
+                await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(numberOfRequests, currentTime))));
 
-            // we moved to a different window, so we need to do the processing again
-            await this.handleRateLimit();
-            return;
-        }
+                // we moved to a different window, so we need to do the processing again
+                await this.handleRateLimit(numberOfRequests);
+                return;
+            }
         // add current request to the number of requests
-        ++this.currentWindowNumberOfRequests;
+        this.currentWindowNumberOfRequests += numberOfRequests;
     }
 
     /** @internal */
-    private timeToWaitForNewRequest(currentTime: number): number {
+    private timeToWaitForNewRequest(numberOfRequests: number, currentTime: number): number {
         if (this.previousWindowNumberOfRequests !== 0) {
             return WINDOW_LENGTH_IN_MILLISECONDS
-                - (this.plan - (this.currentWindowNumberOfRequests + 1))
+                - (this.plan - (this.currentWindowNumberOfRequests + numberOfRequests))
                 / this.previousWindowNumberOfRequests * WINDOW_LENGTH_IN_MILLISECONDS
                 + this.currentWindowStartTime
                 - currentTime;

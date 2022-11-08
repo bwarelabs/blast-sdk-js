@@ -74,19 +74,19 @@ export enum BlastSubscriptionPlan {
 /** @internal */
 export interface Request {
     originalFunction: any;
-    provider: Web3;
+    parent: any;
     arguments: any[];
     callback: any;
     requestId: string;
 }
 
 /** @internal */
-interface RequestData {
+export interface RequestData {
     event: typeof Subject;
     response: any;
 }
 
 /** @internal */
-export interface HashMap {
-    [key: string]: RequestData;
+export interface HashMap<T> {
+    [key: string]: T;
 }
