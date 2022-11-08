@@ -2,9 +2,10 @@ import {BlastNetwork} from "../utils/types";
 import {Blast} from "../api/blast";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+const {Subject} = require('await-notify');
 
 describe('Test automatic back-off when rate limit is reached', () => {
-    function createRequestArray(blast: Blast, requestNumber: number) {
+    function createRegularRequestArray(blast: Blast, requestNumber: number) {
         const requests = [];
         for (let i = 0; i < requestNumber; ++i) {
             requests.push(blast.apiProvider.eth.getGasPrice().should.eventually.not.equal(undefined));
@@ -26,6 +27,30 @@ describe('Test automatic back-off when rate limit is reached', () => {
             network: BlastNetwork.ETH_MAINNET,
             plan: 100,
         });
-        return Promise.all(createRequestArray(blast, 500));
+        return Promise.all(createRegularRequestArray(blast, 500));
     }).timeout(15000);
+
+    it('test rate limit for batch requests', () => {
+        const blast: Blast = new Blast({
+            projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
+            network: BlastNetwork.ETH_MAINNET,
+            plan: 100,
+        });
+
+        const subjects = [];
+        for (let k = 0; k < 10; ++k) {
+            const batch = new blast.apiProvider.BatchRequest();
+
+            for (let i = 0; i < (k < 5 ? 70 : 100); i++) {
+                const subject = new Subject();
+                // @ts-ignore because typescript doesn't see the |request| property
+                batch.add(blast.apiProvider.eth.getGasPrice.request(() => subject.notify()));
+                subjects.push(subject);
+            }
+
+            batch.execute();
+        }
+
+        return Promise.all(subjects.map(subject => subject.wait()));
+    }).timeout(30000);
 });
