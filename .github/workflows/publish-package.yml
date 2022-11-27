@@ -6,13 +6,11 @@ name: Node.js Package
 on:
   push:
     branches: [ "main" ]
+    tags-ignore: 'versionupdate'
 
 jobs:
   publish-gpr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -21,6 +19,15 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - run: npm ci
       - run: npm run build
+      - run: git remote remove origin && git remote add origin https://${{secrets.ACCESS_TOKEN}}@github.com/bwarelabs/blast-sdk-js.git
+      - run: git config --global user.email "noreply@bwarelabs.com"
+      - run: git config --global user.name "Version auto-updater"
+      - run: npm version patch
+        id: version
+      - run: git push origin --delete versionupdate && git tag -a versionupdate HEAD~0 -m \"versionupdate\" && git push origin versionupdate && git push origin main
+        if: steps.version.outcome == 'success'
+        id: updateversion
       - run: npm publish
+        if: steps.updateversion.outcome == 'success'
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
