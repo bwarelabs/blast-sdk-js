@@ -25,7 +25,7 @@ describe('Test functionality', () => {
             const config: BlastConfig = {
                 projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
                 network,
-                plan: 100,
+                rateLimit: 100,
             };
 
             try {
@@ -47,7 +47,7 @@ describe('Test functionality', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            plan: 100,
+            rateLimit: 100,
         });
 
         const result = await blast.apiProvider.eth.getTransactionFromBlock('latest', '0x0');
@@ -59,7 +59,7 @@ describe('Test functionality', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            plan: 100,
+            rateLimit: 100,
         });
 
         const batch = new blast.apiProvider.BatchRequest();
@@ -80,7 +80,7 @@ describe('Test functionality', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            plan: 100,
+            rateLimit: 100,
         });
 
         // @ts-ignore because ts doesn't like this type of override

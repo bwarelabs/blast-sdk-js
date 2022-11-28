@@ -11,7 +11,7 @@ export class Blast {
     readonly apiProvider: Web3;
     readonly wsProvider: Web3;
     private readonly requestEvent: HashMap<RequestData>;
-    private requestsHandler: RequestsHandler;
+    private requestsHandler: RequestsHandler | undefined;
 
     /** @public */
     constructor(config: BlastConfig) {
@@ -22,10 +22,10 @@ export class Blast {
         this.wsProvider = new Web3(getBlastUrl(config.network, config.projectId, 'wss'));
 
         this.requestEvent = {};
-        this.requestsHandler = new RequestsHandler(config.plan, this.requestEvent);
 
-        // can be true or undefined
-        if (config.handleRateLimit !== false) {
+        if (config.rateLimit !== undefined) {
+            this.requestsHandler = new RequestsHandler(config.rateLimit, this.requestEvent);
+
             this.wrapProviderToHandleRequestLimit(this.apiProvider);
             this.wrapProviderToHandleRequestLimit(this.wsProvider);
         }
@@ -61,14 +61,14 @@ export class Blast {
                 for (const subRequest of parent.requests) {
                     const originalCallback = subRequest.callback;
                     subRequest.callback = async function (err: any, res: any) {
-                        if (weakThis.requestsHandler.handleErrors(request, err, true)) {
+                        if (weakThis.requestsHandler?.handleErrors(request, err, true)) {
                             originalCallback(err, res);
                         }
                     }
                 }
             }
 
-            weakThis.requestsHandler.enqueue(request);
+            weakThis.requestsHandler?.enqueue(request);
 
             if (parent.requests === undefined) {
                 // parent is Eth, not BatchRequest

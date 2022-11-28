@@ -1,16 +1,29 @@
-import Web3 from "web3";
 const {Subject} = require('await-notify');
 
 /** @internal */
 export type ConnectionType = 'https' | 'wss';
 
-/** @public */
+/**
+ * Config for intializing a Blast instance.
+ * @public
+ */
 export interface BlastConfig {
+    /**
+     * The project id of your Blast project.
+     */
     projectId: string;
+    /**
+     * The network you want to connect to.
+     */
     network: BlastNetwork;
-    // we accept other numbers for custom plans
-    plan: BlastSubscriptionPlan | number;
-    handleRateLimit?: boolean;
+    /**
+     * Can be the plan you are subscribed to (BlastSubscriptionPlan) or the
+     * maximum number of requests per second your plan allows (useful
+     * especially for custom plans) or undefined (if you don't want the SDK to
+     * delay/retry your requests so that you don't get the 'Rate Limit Reached'
+     * error).
+     */
+    rateLimit: BlastSubscriptionPlan | number | undefined;
 }
 
 /** @public */
@@ -65,7 +78,10 @@ export enum NotSupportedNetworks {
     APTOS_TESTNET = 'aptos-testnet',
 }
 
-/** @public */
+/**
+ * Maximum number of requests per second for each plan.
+ * @public
+ */
 export enum BlastSubscriptionPlan {
     Free = 40,
     Developer = 100,
