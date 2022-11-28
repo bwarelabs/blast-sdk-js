@@ -30,6 +30,6 @@
     "uuid": "^9.0.0",
     "web3": "^1.8.0",
     "web3-eth": "^1.8.0",
-    "web3-providers-ws": "^1.8.0"
+    "web3-providers-ws": "^1.8.1"
   }
 }
