@@ -2,6 +2,7 @@ import {BlastNetwork} from "../utils/types";
 import {Blast} from "../api/blast";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import {RATE_LIMIT_ERROR} from "../utils/utils";
 const {Subject} = require('await-notify');
 
 describe('Test automatic back-off when rate limit is reached', () => {
@@ -25,7 +26,7 @@ describe('Test automatic back-off when rate limit is reached', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            plan: 100,
+            rateLimit: 100,
         });
         return Promise.all(createRegularRequestArray(blast, 500));
     }).timeout(15000);
@@ -34,7 +35,7 @@ describe('Test automatic back-off when rate limit is reached', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            plan: 100,
+            rateLimit: 100,
         });
 
         const subjects = [];

@@ -10,7 +10,7 @@ npm install @bwarelabs/blast-sdk-js
 const config: BlastConfig = {
     projectId: '<insert-your-project-id-here>',
     network: BlastNetwork.ETH_MAINNET,
-    plan: BlastSubscriptionPlan.Free,
+    rateLimit: BlastSubscriptionPlan.Free,
 };
 const blast = new Blast(config);
 ```
@@ -19,6 +19,9 @@ const blast = new Blast(config);
 ```js
 const gasPrice = await blast.apiProvider.eth.getGasPrice();
 ```
+
+## Documentation
+[https://docs.blastapi.io/blast-documentation/blast-sdk](https://docs.blastapi.io/blast-documentation/blast-sdk)
 
 ## Supported methods
 The `Blast` object has 2 providers:
