@@ -61,14 +61,16 @@ export class Blast {
                 for (const subRequest of parent.requests) {
                     const originalCallback = subRequest.callback;
                     subRequest.callback = async function (err: any, res: any) {
-                        if (weakThis.requestsHandler?.handleErrors(request, err, true)) {
+                        const requestHandler = weakThis.requestsHandler as RequestsHandler;
+                        if (requestHandler.handleErrors(request, err, true)) {
                             originalCallback(err, res);
                         }
                     }
                 }
             }
 
-            weakThis.requestsHandler?.enqueue(request);
+            const requestHandler = weakThis.requestsHandler as RequestsHandler;
+            requestHandler.enqueue(request);
 
             if (parent.requests === undefined) {
                 // parent is Eth, not BatchRequest
