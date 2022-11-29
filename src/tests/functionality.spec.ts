@@ -1,7 +1,7 @@
 import {BlastConfig, BlastNetwork} from "../utils/types";
 import * as chai from "chai";
 import {Blast} from "../api/blast";
-import {isNetworkSupported, NOT_SUPPORTED_ERROR} from "../utils/utils";
+import {isNetworkSupported, NOT_SUPPORTED_ERROR, RATE_LIMIT_ERROR} from "../utils/utils";
 import chaiAsPromised from "chai-as-promised";
 const {Subject} = require('await-notify');
 
@@ -96,5 +96,16 @@ describe('Test functionality', () => {
         }
 
         batch.execute();
+    });
+
+    it('requests should work when rateLimit is undefined', async () => {
+        const blast: Blast = new Blast({
+            projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
+            network: BlastNetwork.ETH_MAINNET,
+            rateLimit: undefined,
+        });
+        const gas = await blast.apiProvider.eth.getGasPrice();
+
+        expect(+gas).not.to.be.NaN;
     });
 });

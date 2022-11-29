@@ -2,6 +2,7 @@ import {BlastNetwork} from "../utils/types";
 import {Blast} from "../api/blast";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import {RATE_LIMIT_ERROR} from "../utils/utils";
 const {Subject} = require('await-notify');
 
 describe('Test automatic back-off when rate limit is reached', () => {
