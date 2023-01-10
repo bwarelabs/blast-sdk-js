@@ -107,3 +107,5 @@ dist
 
 # file used for testing
 test.ts
+
+.npmrc
