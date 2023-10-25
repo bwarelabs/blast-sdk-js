@@ -1,17 +1,22 @@
 import Web3 from "web3";
-import {getBlastUrl, isNetworkSupported, NOT_SUPPORTED_ERROR} from "../utils/utils";
-import {BlastConfig, HashMap, RequestData} from "../utils/types";
-import {Eth} from "web3-eth";
-import {RequestsHandler} from "./requests-handler";
-import {v4 as uuidv4} from "uuid";
-const {Subject} = require('await-notify');
+import { fetchConfig, getBlastBuilderUrl, getBlastUrl, isNetworkSupported, NOT_SUPPORTED_ERROR } from "../utils/utils";
+import { BlastConfig, HashMap, RequestData } from "../utils/types";
+import { Eth } from "web3-eth";
+import { RequestsHandler } from "./requests-handler";
+import { v4 as uuidv4 } from "uuid";
+import { Builder } from "./builder";
+const { Subject } = require('await-notify');
 
 /** @public */
 export class Blast {
+
     readonly apiProvider: Web3;
     readonly wsProvider: Web3;
+
     private readonly requestEvent: HashMap<RequestData>;
     private requestsHandler: RequestsHandler | undefined;
+
+    public readonly builder: Builder;
 
     /** @public */
     constructor(config: BlastConfig) {
@@ -20,6 +25,7 @@ export class Blast {
         }
         this.apiProvider = new Web3(getBlastUrl(config.network, config.projectId, 'https'));
         this.wsProvider = new Web3(getBlastUrl(config.network, config.projectId, 'wss'));
+        this.builder = new Builder(config);
 
         this.requestEvent = {};
 
@@ -31,15 +37,16 @@ export class Blast {
         }
     }
 
+
     /** @internal */
     private overrideFunctionToHandleRequestLimit(parent: any, originalFunction: any) {
         const weakThis = this;
         return async function () {
             const requestId = uuidv4();
-            weakThis.requestEvent[requestId] = {event: new Subject(), response: undefined};
+            weakThis.requestEvent[requestId] = { event: new Subject(), response: undefined };
 
             let argumentsWithoutCallback = Array.from(arguments);
-            let callback = () => {};
+            let callback = () => { };
 
             if (arguments.length > 0) {
                 const callbackFromArguments = arguments[arguments.length - 1];
