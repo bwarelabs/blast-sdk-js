@@ -104,6 +104,7 @@ export enum NotSupportedNetworks {
     SUI_MAINNET = 'sui-mainnet',
     SUI_TESTNET = 'sui-testnet',
 }
+
 /**
  * Maximum number of requests per second for each plan.
  * @public
@@ -132,4 +133,25 @@ export interface RequestData {
 /** @internal */
 export interface HashMap<T> {
     [key: string]: T;
+}
+
+/** @internal */
+export const BUILDER_WEIGHTS: { [key: string]: number } = {
+    'getTransaction': 1,
+    'getBlockTransactions': 2,
+    'getTokenMetadata': 1,
+    'getTokenTransfers': 2,
+    'getTokenMints': 1,
+    'getTokenBurns': 2,
+    'getTokenHolders': 3,
+    'getTokenAllowance': 1,
+    'getTokenApprovals': 2,
+    'getTokenSupply': 1,
+    'getLogs': 5,
+    'getBlockReceipts': 3,
+    'getWalletTokenAllowance': 4,
+    'getWalletTokenBalances': 4,
+    'getWalletTokenHistory': 5,
+    'getWalletTokenTransfers': 4,
+    'getWalletTransactions': 4,
 }

@@ -2,7 +2,6 @@ import { BlastNetwork } from "../utils/types";
 import { Blast } from "../api/blast";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { RATE_LIMIT_ERROR } from "../utils/utils";
 const { Subject } = require('await-notify');
 
 describe('Test automatic back-off when rate limit is reached', () => {
@@ -17,14 +16,15 @@ describe('Test automatic back-off when rate limit is reached', () => {
     function createBuilderRequestArray(blast: Blast, requestNumber: number) {
         const requests = [];
         for (let i = 0; i < requestNumber; ++i) {
-            requests.push(blast.builder.getTransaction('0x067ce4942cb3c65fe74e21063c35f786eb666712ba5d074d2dff56a6d28c1ba3').should.not.equal(undefined));
+            requests.push(blast.builder.getTransaction('0x067ce4942cb3c65fe74e21063c35f786eb666712ba5d074d2dff56a6d28c1ba3').should.eventually.have.property('blockNumber'));
         }
         return requests;
     }
 
     before(() => {
-        process.env.PROJECT_ID_CUSTOM_PLAN_100 = 'test';
         chai.use(chaiAsPromised);
+        chai.config.showDiff = true;
+        chai.config.truncateThreshold = 0;
         chai.should();
     });
 
@@ -35,18 +35,18 @@ describe('Test automatic back-off when rate limit is reached', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            rateLimit: 100,
+            rateLimit: 40,
         });
-        return Promise.all(createRegularRequestArray(blast, 500));
+        return Promise.all(createRegularRequestArray(blast, 100));
     }).timeout(15000);
 
     it('test rate limit for custom 100 plan for builder', async () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            rateLimit: 100,
+            rateLimit: 40,
         });
-        return Promise.all(createBuilderRequestArray(blast, 500));
+        return Promise.all(createBuilderRequestArray(blast, 1));
     }).timeout(15000);
 
     it('test rate limit for batch requests', () => {

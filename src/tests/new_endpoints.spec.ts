@@ -20,7 +20,7 @@ describe('Test New Endponts', () => {
         const config: BlastConfig = {
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            rateLimit: BlastSubscriptionPlan.Developer
+            rateLimit: BlastSubscriptionPlan.Free
         }
 
         blast = new Blast(config);
@@ -29,18 +29,6 @@ describe('Test New Endponts', () => {
 
     beforeEach(() => new Promise((resolve) => setTimeout(resolve, 2000)));
     afterEach(() => { process.on = originalProcessOn });
-
-    // function createRegularRequestArray(blast: Blast, requestNumber: number) {
-    //     const requests = [];
-    //     for (let i = 0; i < requestNumber; ++i) {
-    //         requests.push(blast.builder.getTransaction('0x067ce4942cb3c65fe74e21063c35f786eb666712ba5d074d2dff56a6d28c1ba3').should.not.equal(undefined));
-    //     }
-    //     return requests;
-    // }
-
-    // it('Test requests', async () => {
-    //     return Promise.all(createRegularRequestArray(blast, 500));
-    // }).timeout(15000);
 
     it('Get Transaction', async () => {
         try {

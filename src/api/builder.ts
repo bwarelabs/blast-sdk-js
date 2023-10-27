@@ -1,8 +1,6 @@
-import Web3 from "web3";
+
 import { BUILDER_NOT_SUPPORTED_ERROR, fetchConfig, getBlastBuilderUrl, isBuilderSupported } from "../utils/utils";
-import { BlastConfig, BlastNetwork, HashMap, RequestData } from "../utils/types";
-import { RequestsHandler } from "./requests-handler";
-const { Subject } = require('await-notify');
+import { BUILDER_WEIGHTS, BlastConfig, BlastNetwork } from "../utils/types";
 
 function checkBuilderSupported(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     // Capture original method
@@ -24,6 +22,7 @@ function checkBuilderSupported(target: any, propertyKey: string, descriptor: Pro
     };
     // Set name to conform to the original method
     Object.defineProperty(descriptor.value, 'name', { value: propertyKey })
+    Object.defineProperty(descriptor.value, 'weight', { value: BUILDER_WEIGHTS[propertyKey] })
     return descriptor;
 }
 
@@ -32,12 +31,11 @@ export class Builder {
 
     readonly builderUrl: string;
     readonly network: BlastNetwork;
-    private readonly requestsHandler?: RequestsHandler;
+
     /** @public */
-    constructor(config: BlastConfig, requestsHandler?: RequestsHandler) {
+    constructor(config: BlastConfig) {
         this.builderUrl = getBlastBuilderUrl(config.network, config.projectId, 'https')
         this.network = config.network
-        this.requestsHandler = requestsHandler
     }
 
     /** @public */
@@ -45,6 +43,9 @@ export class Builder {
     public async getTransaction(transactionHash: string) {
         const response = await fetch(`${this.builderUrl}/getTransaction?transactionHash=${transactionHash}`, fetchConfig)
         const result = await response.json()
+        if (result?.error) {
+            throw result
+        }
         return result
     }
 

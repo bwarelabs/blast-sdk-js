@@ -6,6 +6,9 @@ export const WINDOW_LENGTH_IN_MILLISECONDS = 1000;
 export const NOT_STARTED = -1;
 
 /** @internal */
+export const RATE_LIMIT_CODE = 'rate_limited';
+
+/** @internal */
 export const NOT_SUPPORTED_ERROR = 'Provided network is not supported';
 
 /** @internal */
