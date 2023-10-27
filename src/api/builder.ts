@@ -1,6 +1,7 @@
 import Web3 from "web3";
 import { BUILDER_NOT_SUPPORTED_ERROR, fetchConfig, getBlastBuilderUrl, isBuilderSupported } from "../utils/utils";
-import { BlastConfig, BlastNetwork } from "../utils/types";
+import { BlastConfig, BlastNetwork, HashMap, RequestData } from "../utils/types";
+import { RequestsHandler } from "./requests-handler";
 const { Subject } = require('await-notify');
 
 function checkBuilderSupported(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
@@ -31,17 +32,17 @@ export class Builder {
 
     readonly builderUrl: string;
     readonly network: BlastNetwork;
-
+    private readonly requestsHandler?: RequestsHandler;
     /** @public */
-    constructor(config: BlastConfig) {
+    constructor(config: BlastConfig, requestsHandler?: RequestsHandler) {
         this.builderUrl = getBlastBuilderUrl(config.network, config.projectId, 'https')
         this.network = config.network
+        this.requestsHandler = requestsHandler
     }
 
     /** @public */
     @checkBuilderSupported
     public async getTransaction(transactionHash: string) {
-        const functionName = this.getTransaction.name
         const response = await fetch(`${this.builderUrl}/getTransaction?transactionHash=${transactionHash}`, fetchConfig)
         const result = await response.json()
         return result
@@ -50,8 +51,7 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getBlockTransactions(blockNumberOrHash: string) {
-        const functionName = this.getBlockTransactions.name
-        const url = `${this.builderUrl}/${functionName}?blockNumberOrHash=${blockNumberOrHash}`
+        const url = `${this.builderUrl}/getBlockTransactions?blockNumberOrHash=${blockNumberOrHash}`
         const response = await fetch(url, fetchConfig)
         const result = response.json()
         return result
@@ -60,8 +60,7 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenMetadata(contractAddress: string) {
-        const functionName = this.getTokenMetadata.name
-        const url = `${this.builderUrl}/${functionName}?contractAddress=${contractAddress}`
+        const url = `${this.builderUrl}/getTokenMetadata?contractAddress=${contractAddress}`
         const response = await fetch(url, fetchConfig)
         const result = response.json()
         return result
@@ -70,11 +69,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenTransfers(contractAddress: string, fromBlock?: string | number, toBlock?: string | number, pageSize?: number, pageKey?: string) {
-        // get function name
-        const functionName = this.getTokenTransfers.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?contractAddress=${contractAddress}`,
+            `/getTokenTransfers?contractAddress=${contractAddress}`,
             fromBlock ? `&fromBlock=${fromBlock}` : '',
             toBlock ? `&toBlock=${toBlock}` : '',
             pageSize ? `&pageSize=${pageSize}` : '',
@@ -90,11 +87,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenMints(contractAddress: string, fromBlock?: string | number, toBlock?: string | number, toAddress?: string, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getTokenMints.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?contractAddress=${contractAddress}`,
+            `/getTokenMints?contractAddress=${contractAddress}`,
             fromBlock ? `&fromBlock=${fromBlock}` : '',
             toBlock ? `&toBlock=${toBlock}` : '',
             toAddress ? `&toAddress=${toAddress}` : '',
@@ -111,11 +106,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenBurns(contractAddress: string, fromBlock?: string | number, toBlock?: string | number, fromAddress?: string, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getTokenBurns.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?contractAddress=${contractAddress}`,
+            `/getTokenBurns?contractAddress=${contractAddress}`,
             fromBlock ? `&fromBlock=${fromBlock}` : '',
             toBlock ? `&toBlock=${toBlock}` : '',
             fromAddress ? `&fromAddress=${fromAddress}` : '',
@@ -132,11 +125,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenHolders(contractAddress: string, blockNumber?: string | number, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getTokenHolders.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?contractAddress=${contractAddress}`,
+            `/getTokenHolders?contractAddress=${contractAddress}`,
             blockNumber ? `&blockNumber=${blockNumber}` : '',
             pageSize ? `&pageSize=${pageSize}` : '',
             pageKey ? `&pageKey=${pageKey}` : ''
@@ -151,8 +142,7 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenAllowance(contractAddress: string, ownerAddress: string, spenderAddress: string) {
-        const functionName = this.getTokenAllowance.name
-        const url = `${this.builderUrl}/${functionName}?contract_address=${contractAddress}&owner_address=${ownerAddress}&spender_address=${spenderAddress}`
+        const url = `${this.builderUrl}/getTokenAllowance?contractAddress=${contractAddress}&ownerAddress=${ownerAddress}&spenderAddress=${spenderAddress}`
         const response = await fetch(url, fetchConfig)
         const result = response.json()
         return result
@@ -161,11 +151,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenApprovals(contractAddress: string, ownerAddress?: string, spenderAddress?: string, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getTokenApprovals.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?contractAddress=${contractAddress}`,
+            `/getTokenApprovals?contractAddress=${contractAddress}`,
             ownerAddress ? `&ownerAddress=${ownerAddress}` : '',
             spenderAddress ? `&spenderAddress=${spenderAddress}` : '',
             pageSize ? `&pageSize=${pageSize}` : '',
@@ -181,11 +169,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getTokenSupply(contractAddress: string, blockNumber?: string) {
-
-        const functionName = this.getTokenSupply.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?contractAddress=${contractAddress}`,
+            `/getTokenSupply?contractAddress=${contractAddress}`,
             blockNumber ? `&blockNumber=${blockNumber}` : '',
         ];
 
@@ -198,11 +184,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getLogs(fromBlock?: string | number, toBlock?: string | number, blockHash?: string, contractAddress?: string, topic0?: string, topic1?: string, topic2?: string, topic3?: string, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getLogs.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}`,
+            `/getLogs`,
             fromBlock ? `?fromBlock=${fromBlock}` : '',
             toBlock ? `&toBlock=${toBlock}` : '',
             blockHash ? `&blockHash=${blockHash}` : '',
@@ -224,8 +208,7 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getBlockReceipts(blockNumberOrHash: string) {
-        const functionName = this.getBlockReceipts.name
-        const url = `${this.builderUrl}/${functionName}?blockNumberOrHash=${blockNumberOrHash}`
+        const url = `${this.builderUrl}/getBlockReceipts?blockNumberOrHash=${blockNumberOrHash}`
         const response = await fetch(url, fetchConfig)
         const result = response.json()
         return result
@@ -234,11 +217,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getWalletTokenAllowance(walletAddress: string, contractAddress?: string, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getWalletTokenAllowance.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?walletAddress=${walletAddress}`,
+            `/getWalletTokenAllowance?walletAddress=${walletAddress}`,
             contractAddress ? `&contractAddress=${contractAddress}` : '',
             pageSize ? `&pageSize=${pageSize}` : '',
             pageKey ? `&pageKey=${pageKey}` : ''
@@ -253,11 +234,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getWalletTokenBalances(walletAddress: string, contractAddresses?: string[], pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getWalletTokenBalances.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?walletAddress=${walletAddress}`,
+            `/getWalletTokenBalances?walletAddress=${walletAddress}`,
             contractAddresses ? `&contractAddresses=${contractAddresses}` : '',
             pageSize ? `&pageSize=${pageSize}` : '',
             pageKey ? `&pageKey=${pageKey}` : ''
@@ -272,11 +251,9 @@ export class Builder {
     /** @public */
     @checkBuilderSupported
     public async getWalletTokenHistory(walletAddress: string, blockNumber?: string, pageSize?: number, pageKey?: string) {
-
-        const functionName = this.getWalletTokenHistory.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?walletAddress=${walletAddress}`,
+            `/getWalletTokenHistory?walletAddress=${walletAddress}`,
             blockNumber ? `&blockNumber=${blockNumber}` : '',
             pageSize ? `&pageSize=${pageSize}` : '',
             pageKey ? `&pageKey=${pageKey}` : ''
@@ -300,11 +277,9 @@ export class Builder {
         onlyOutgoing: boolean = false,
         pageSize?: number,
         pageKey?: string) {
-
-        const functionName = this.getWalletTokenTransfers.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?walletAddress=${walletAddress}`,
+            `/getWalletTokenTransfers?walletAddress=${walletAddress}`,
             fromBlock ? `&fromBlock=${fromBlock}` : '',
             toBlock ? `&toBlock=${toBlock}` : '',
             contractAddress ? `&contractAddress=${contractAddress}` : '',
@@ -316,7 +291,6 @@ export class Builder {
         ];
 
         const url = urlComponents.join('');
-        console.log(url)
         const response = await fetch(url, fetchConfig);
         const result = response.json();
         return result;
@@ -334,11 +308,9 @@ export class Builder {
         pageSize?: number,
         pageKey?: string
     ) {
-        // Build the components
-        const functionName = this.getWalletTransactions.name
         const urlComponents = [
             this.builderUrl,
-            `/${functionName}?walletAddress=${walletAddress}`,
+            `/getWalletTransactions?walletAddress=${walletAddress}`,
             fromBlock ? `&fromBlock=${fromBlock}` : '',
             toBlock ? `&toBlock=${toBlock}` : '',
             secondWalletAddress ? `&secondWalletAddress=${secondWalletAddress}` : '',

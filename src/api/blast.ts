@@ -25,7 +25,6 @@ export class Blast {
         }
         this.apiProvider = new Web3(getBlastUrl(config.network, config.projectId, 'https'));
         this.wsProvider = new Web3(getBlastUrl(config.network, config.projectId, 'wss'));
-        this.builder = new Builder(config);
 
         this.requestEvent = {};
 
@@ -35,8 +34,19 @@ export class Blast {
             this.wrapProviderToHandleRequestLimit(this.apiProvider);
             this.wrapProviderToHandleRequestLimit(this.wsProvider);
         }
-    }
 
+        this.builder = new Builder(config, this.requestsHandler);
+
+        for (const notTypedFunc of Object.getOwnPropertyNames(Object.getPrototypeOf(this.builder))) {
+            const func = notTypedFunc as keyof Builder;
+            const type = typeof (this.builder[func]);
+
+            if (type === 'function') {
+                // @ts-ignore
+                this.builder[func] = this.overrideFunctionToHandleRequestLimit(this.builder, this.builder[func]);
+            }
+        }
+    }
 
     /** @internal */
     private overrideFunctionToHandleRequestLimit(parent: any, originalFunction: any) {

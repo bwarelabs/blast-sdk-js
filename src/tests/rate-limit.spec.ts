@@ -1,9 +1,9 @@
-import {BlastNetwork} from "../utils/types";
-import {Blast} from "../api/blast";
+import { BlastNetwork } from "../utils/types";
+import { Blast } from "../api/blast";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import {RATE_LIMIT_ERROR} from "../utils/utils";
-const {Subject} = require('await-notify');
+import { RATE_LIMIT_ERROR } from "../utils/utils";
+const { Subject } = require('await-notify');
 
 describe('Test automatic back-off when rate limit is reached', () => {
     function createRegularRequestArray(blast: Blast, requestNumber: number) {
@@ -14,7 +14,16 @@ describe('Test automatic back-off when rate limit is reached', () => {
         return requests;
     }
 
+    function createBuilderRequestArray(blast: Blast, requestNumber: number) {
+        const requests = [];
+        for (let i = 0; i < requestNumber; ++i) {
+            requests.push(blast.builder.getTransaction('0x067ce4942cb3c65fe74e21063c35f786eb666712ba5d074d2dff56a6d28c1ba3').should.not.equal(undefined));
+        }
+        return requests;
+    }
+
     before(() => {
+        process.env.PROJECT_ID_CUSTOM_PLAN_100 = 'test';
         chai.use(chaiAsPromised);
         chai.should();
     });
@@ -29,6 +38,15 @@ describe('Test automatic back-off when rate limit is reached', () => {
             rateLimit: 100,
         });
         return Promise.all(createRegularRequestArray(blast, 500));
+    }).timeout(15000);
+
+    it('test rate limit for custom 100 plan for builder', async () => {
+        const blast: Blast = new Blast({
+            projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
+            network: BlastNetwork.ETH_MAINNET,
+            rateLimit: 100,
+        });
+        return Promise.all(createBuilderRequestArray(blast, 500));
     }).timeout(15000);
 
     it('test rate limit for batch requests', () => {

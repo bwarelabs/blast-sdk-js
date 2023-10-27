@@ -104,9 +104,6 @@ export enum NotSupportedNetworks {
     SUI_MAINNET = 'sui-mainnet',
     SUI_TESTNET = 'sui-testnet',
 }
-// NO WSS
-// STARKNET_TESTNET = 'starknet-testnet',
-// STARKNET_MAINNET = 'starknet-mainnet',
 /**
  * Maximum number of requests per second for each plan.
  * @public
