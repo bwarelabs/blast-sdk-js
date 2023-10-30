@@ -36,13 +36,15 @@ export class Blast {
         }
 
         this.builder = new Builder(config);
-        for (const notTypedFunc of Object.getOwnPropertyNames(Object.getPrototypeOf(this.builder))) {
-            const func = notTypedFunc as keyof Builder;
-            const type = typeof (this.builder[func]);
+        if (config.rateLimit !== undefined) {
+            for (const notTypedFunc of Object.getOwnPropertyNames(Object.getPrototypeOf(this.builder))) {
+                const func = notTypedFunc as keyof Builder;
+                const type = typeof (this.builder[func]);
 
-            if (type === 'function') {
-                // @ts-ignore
-                this.builder[func] = this.overrideFunctionToHandleRequestLimit(this.builder, this.builder[func]);
+                if (type === 'function') {
+                    // @ts-ignore
+                    this.builder[func] = this.overrideFunctionToHandleRequestLimit(this.builder, this.builder[func]);
+                }
             }
         }
     }
