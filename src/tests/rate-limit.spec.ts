@@ -35,18 +35,18 @@ describe('Test automatic back-off when rate limit is reached', () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            rateLimit: 40,
+            rateLimit: 100,
         });
-        return Promise.all(createRegularRequestArray(blast, 100));
+        return Promise.all(createRegularRequestArray(blast, 500));
     }).timeout(15000);
 
     it('test rate limit for custom 100 plan for builder', async () => {
         const blast: Blast = new Blast({
             projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
-            rateLimit: 40,
+            rateLimit: 100,
         });
-        return Promise.all(createBuilderRequestArray(blast, 1));
+        return Promise.all(createBuilderRequestArray(blast, 500));
     }).timeout(15000);
 
     it('test rate limit for batch requests', () => {

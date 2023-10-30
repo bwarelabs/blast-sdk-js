@@ -2,28 +2,44 @@
 import { BUILDER_NOT_SUPPORTED_ERROR, fetchConfig, getBlastBuilderUrl, isBuilderSupported } from "../utils/utils";
 import { BUILDER_WEIGHTS, BlastConfig, BlastNetwork } from "../utils/types";
 
-function checkBuilderSupported(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    // Capture original method
-    const originalMethod = descriptor.value;
+function builderApi(paramNames: string[]) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        // Capture original method
+        const originalMethod = descriptor.value;
+        // Call the function with the arguments
+        descriptor.value = async function (...args: any[]) {
+            // Cast to Builder class to access members
+            const weakThis = this as Builder;
 
-    // Call the function with the arguments
-    descriptor.value = async function (...args: any[]) {
-        // Cast to Builder class to access members
-        const weakThis = this as Builder;
+            // Check if the network is supported
+            if (!isBuilderSupported(weakThis.network)) {
+                throw new Error(BUILDER_NOT_SUPPORTED_ERROR);
+            }
 
-        // Check if the network is supported
-        if (!isBuilderSupported(weakThis.network)) {
-            throw new Error(BUILDER_NOT_SUPPORTED_ERROR);
+            const url = `${weakThis.builderUrl}/${propertyKey}?${getQueryString(paramNames, args)}`;
+            const response = await fetch(url, fetchConfig);
+            const result = await response.json();
+            if (result?.error) {
+                throw result
+            }
+            return result;
+        };
+        // Set name to conform to the original method
+        Object.defineProperty(descriptor.value, 'name', { value: propertyKey })
+        Object.defineProperty(descriptor.value, 'weight', { value: BUILDER_WEIGHTS[propertyKey] })
+        return descriptor;
+    }
+}
+
+function getQueryString(paramNames: string[], args: any[]) {
+    const queryString = args.reduce((acc, arg, index) => {
+        if (arg) {
+            acc.push(`${paramNames[index]}=${arg}`)
         }
+        return acc
+    }, [])
 
-        // Call the original method
-        const result = await originalMethod.call(this, ...args);
-        return result;
-    };
-    // Set name to conform to the original method
-    Object.defineProperty(descriptor.value, 'name', { value: propertyKey })
-    Object.defineProperty(descriptor.value, 'weight', { value: BUILDER_WEIGHTS[propertyKey] })
-    return descriptor;
+    return queryString.join('&')
 }
 
 /** @internal */
@@ -39,235 +55,130 @@ export class Builder {
     }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTransaction(transactionHash: string) {
-        const response = await fetch(`${this.builderUrl}/getTransaction?transactionHash=${transactionHash}`, fetchConfig)
-        const result = await response.json()
-        if (result?.error) {
-            throw result
-        }
-        return result
-    }
+    @builderApi(['transactionHash'])
+    public async getTransaction(transactionHash: string): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getBlockTransactions(blockNumberOrHash: string) {
-        const url = `${this.builderUrl}/getBlockTransactions?blockNumberOrHash=${blockNumberOrHash}`
-        const response = await fetch(url, fetchConfig)
-        const result = response.json()
-        return result
-    }
+    @builderApi(['blockNumberOrHash'])
+    public async getBlockTransactions(blockNumberOrHash: string): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenMetadata(contractAddress: string) {
-        const url = `${this.builderUrl}/getTokenMetadata?contractAddress=${contractAddress}`
-        const response = await fetch(url, fetchConfig)
-        const result = response.json()
-        return result
-    }
+    @builderApi(['contractAddress'])
+    public async getTokenMetadata(contractAddress: string): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenTransfers(contractAddress: string, fromBlock?: string | number, toBlock?: string | number, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getTokenTransfers?contractAddress=${contractAddress}`,
-            fromBlock ? `&fromBlock=${fromBlock}` : '',
-            toBlock ? `&toBlock=${toBlock}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['contractAddress', 'fromBlock', 'toBlock', 'pageSize', 'pageKey'])
+    public async getTokenTransfers(
+        contractAddress: string,
+        fromBlock?: string | number,
+        toBlock?: string | number,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenMints(contractAddress: string, fromBlock?: string | number, toBlock?: string | number, toAddress?: string, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getTokenMints?contractAddress=${contractAddress}`,
-            fromBlock ? `&fromBlock=${fromBlock}` : '',
-            toBlock ? `&toBlock=${toBlock}` : '',
-            toAddress ? `&toAddress=${toAddress}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['contractAddress', 'fromBlock', 'toBlock', 'toAddress', 'pageSize', 'pageKey'])
+    public async getTokenMints(
+        contractAddress: string,
+        fromBlock?: string | number,
+        toBlock?: string | number,
+        toAddress?: string,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenBurns(contractAddress: string, fromBlock?: string | number, toBlock?: string | number, fromAddress?: string, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getTokenBurns?contractAddress=${contractAddress}`,
-            fromBlock ? `&fromBlock=${fromBlock}` : '',
-            toBlock ? `&toBlock=${toBlock}` : '',
-            fromAddress ? `&fromAddress=${fromAddress}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['contractAddress', 'fromBlock', 'toBlock', 'fromAddress', 'pageSize', 'pageKey'])
+    public async getTokenBurns(
+        contractAddress: string,
+        fromBlock?: string | number,
+        toBlock?: string | number,
+        fromAddress?: string,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenHolders(contractAddress: string, blockNumber?: string | number, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getTokenHolders?contractAddress=${contractAddress}`,
-            blockNumber ? `&blockNumber=${blockNumber}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['contractAddress', 'blockNumber', 'pageSize', 'pageKey'])
+    public async getTokenHolders(
+        contractAddress: string,
+        blockNumber?: string | number,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenAllowance(contractAddress: string, ownerAddress: string, spenderAddress: string) {
-        const url = `${this.builderUrl}/getTokenAllowance?contractAddress=${contractAddress}&ownerAddress=${ownerAddress}&spenderAddress=${spenderAddress}`
-        const response = await fetch(url, fetchConfig)
-        const result = response.json()
-        return result
-    }
+    @builderApi(['contractAddress', 'ownerAddress', 'spenderAddress'])
+    public async getTokenAllowance(
+        contractAddress: string,
+        ownerAddress: string,
+        spenderAddress: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenApprovals(contractAddress: string, ownerAddress?: string, spenderAddress?: string, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getTokenApprovals?contractAddress=${contractAddress}`,
-            ownerAddress ? `&ownerAddress=${ownerAddress}` : '',
-            spenderAddress ? `&spenderAddress=${spenderAddress}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['contractAddress', 'fromBlock', 'toBlock', 'ownerAddress', 'spenderAddress', 'pageSize', 'pageKey'])
+    public async getTokenApprovals(
+        contractAddress: string,
+        fromBlock?: string | number,
+        toBlock?: string | number,
+        ownerAddress?: string,
+        spenderAddress?: string,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getTokenSupply(contractAddress: string, blockNumber?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getTokenSupply?contractAddress=${contractAddress}`,
-            blockNumber ? `&blockNumber=${blockNumber}` : '',
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['contractAddress', 'blockNumber'])
+    public async getTokenSupply(contractAddress: string, blockNumber?: string): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getLogs(fromBlock?: string | number, toBlock?: string | number, blockHash?: string, contractAddress?: string, topic0?: string, topic1?: string, topic2?: string, topic3?: string, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getLogs`,
-            fromBlock ? `?fromBlock=${fromBlock}` : '',
-            toBlock ? `&toBlock=${toBlock}` : '',
-            blockHash ? `&blockHash=${blockHash}` : '',
-            contractAddress ? `&contractAddress=${contractAddress}` : '',
-            topic0 ? `&topic0=${topic0}` : '',
-            topic1 ? `&topic1=${topic1}` : '',
-            topic2 ? `&topic2=${topic2}` : '',
-            topic3 ? `&topic3=${topic3}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['fromBlock', 'toBlock', 'blockHash', 'contractAddress', 'topic0', 'topic1', 'topic2', 'topic3', 'pageSize', 'pageKey'])
+    public async getLogs(
+        fromBlock?: string | number,
+        toBlock?: string | number,
+        blockHash?: string,
+        contractAddress?: string,
+        topic0?: string,
+        topic1?: string,
+        topic2?: string,
+        topic3?: string,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getBlockReceipts(blockNumberOrHash: string) {
-        const url = `${this.builderUrl}/getBlockReceipts?blockNumberOrHash=${blockNumberOrHash}`
-        const response = await fetch(url, fetchConfig)
-        const result = response.json()
-        return result
-    }
+    @builderApi(['blockNumberOrHash'])
+    public async getBlockReceipts(blockNumberOrHash: string): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getWalletTokenAllowance(walletAddress: string, contractAddress?: string, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getWalletTokenAllowance?walletAddress=${walletAddress}`,
-            contractAddress ? `&contractAddress=${contractAddress}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['walletAddress', 'contractAddress', 'pageSize', 'pageKey'])
+    public async getWalletTokenAllowances(
+        walletAddress: string,
+        contractAddress?: string,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getWalletTokenBalances(walletAddress: string, contractAddresses?: string[], pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getWalletTokenBalances?walletAddress=${walletAddress}`,
-            contractAddresses ? `&contractAddresses=${contractAddresses}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['walletAddress', 'contractAddresses', 'pageSize', 'pageKey'])
+    public async getWalletTokenBalances(
+        walletAddress: string,
+        contractAddresses?: string[],
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
-    public async getWalletTokenHistory(walletAddress: string, blockNumber?: string, pageSize?: number, pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getWalletTokenHistory?walletAddress=${walletAddress}`,
-            blockNumber ? `&blockNumber=${blockNumber}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+    @builderApi(['walletAddress', 'blockNumber', 'pageSize', 'pageKey'])
+    public async getWalletTokenHistory(
+        walletAddress: string,
+        blockNumber?: string,
+        pageSize?: number,
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
+    @builderApi(['walletAddress', 'fromBlock', 'toBlock', 'contractAddress', 'secondWalletAddress', 'onlyIncoming', 'onlyOutgoing', 'pageSize', 'pageKey'])
     public async getWalletTokenTransfers(
         walletAddress: string,
         fromBlock?: string | number,
@@ -277,28 +188,11 @@ export class Builder {
         onlyIncoming: boolean = false,
         onlyOutgoing: boolean = false,
         pageSize?: number,
-        pageKey?: string) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getWalletTokenTransfers?walletAddress=${walletAddress}`,
-            fromBlock ? `&fromBlock=${fromBlock}` : '',
-            toBlock ? `&toBlock=${toBlock}` : '',
-            contractAddress ? `&contractAddress=${contractAddress}` : '',
-            secondWalletAddress ? `&secondWalletAddress=${secondWalletAddress}` : '',
-            onlyIncoming ? `&onlyIncoming=${onlyIncoming}` : '',
-            onlyOutgoing ? `&onlyOutgoing=${onlyOutgoing}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
+        pageKey?: string
+    ): Promise<any> { }
 
     /** @public */
-    @checkBuilderSupported
+    @builderApi(['walletAddress', 'fromBlock', 'toBlock', 'secondWalletAddress', 'onlyIncoming', 'onlyOutgoing', 'pageSize', 'pageKey'])
     public async getWalletTransactions(
         walletAddress: string,
         fromBlock?: string | number,
@@ -308,23 +202,5 @@ export class Builder {
         onlyOutgoing: boolean = false,
         pageSize?: number,
         pageKey?: string
-    ) {
-        const urlComponents = [
-            this.builderUrl,
-            `/getWalletTransactions?walletAddress=${walletAddress}`,
-            fromBlock ? `&fromBlock=${fromBlock}` : '',
-            toBlock ? `&toBlock=${toBlock}` : '',
-            secondWalletAddress ? `&secondWalletAddress=${secondWalletAddress}` : '',
-            onlyIncoming ? `&onlyIncoming=${onlyIncoming}` : '',
-            onlyOutgoing ? `&onlyOutgoing=${onlyOutgoing}` : '',
-            pageSize ? `&pageSize=${pageSize}` : '',
-            pageKey ? `&pageKey=${pageKey}` : ''
-        ];
-
-        const url = urlComponents.join('');
-        const response = await fetch(url, fetchConfig);
-        const result = response.json();
-        return result;
-    }
-
+    ): Promise<any> { }
 }

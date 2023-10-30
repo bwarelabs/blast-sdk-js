@@ -33,18 +33,17 @@ describe('Test New Endponts', () => {
     it('Get Transaction', async () => {
         try {
             const object = await blast.builder.getTransaction('0x067ce4942cb3c65fe74e21063c35f786eb666712ba5d074d2dff56a6d28c1ba3')
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('transactionIndex')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
         }
-
     }).timeout(15000);
 
     it('Get Block Transaction', async () => {
         try {
             const object = await blast.builder.getBlockTransactions('0x117af91')
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('blockNumber')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -61,7 +60,8 @@ describe('Test New Endponts', () => {
                 undefined,
                 true
             )
-            expect(object).to.be.a('object')
+
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -72,7 +72,7 @@ describe('Test New Endponts', () => {
     it('Get Token Metadata', async () => {
         try {
             const object = await blast.builder.getTokenMetadata('0x6b175474e89094c44da98b954eedeac495271d0f')
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('contractSymbol')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -88,7 +88,7 @@ describe('Test New Endponts', () => {
                 undefined,
                 undefined
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -104,7 +104,7 @@ describe('Test New Endponts', () => {
                 undefined,
                 undefined
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -120,7 +120,7 @@ describe('Test New Endponts', () => {
                 undefined,
                 undefined
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -136,7 +136,7 @@ describe('Test New Endponts', () => {
                 undefined,
                 undefined,
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -150,7 +150,7 @@ describe('Test New Endponts', () => {
                 '0xf1a726210550c306a9964b251cbcd3fa5ecb275d',
                 '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('allowance')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -160,11 +160,11 @@ describe('Test New Endponts', () => {
     it('Get Token Approvals', async () => {
         try {
             const object = await blast.builder.getTokenApprovals(
-                '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
-                '0xf1a726210550c306a9964b251cbcd3fa5ecb275d',
-                '0xdef1c0ded9bec7f1a1670819833240f027b25eff'
+                '0xdac17f958d2ee523a2206206994597c13d831ec7',
+                undefined,
+                undefined,
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -176,7 +176,7 @@ describe('Test New Endponts', () => {
             const object = await blast.builder.getTokenSupply(
                 '0xdAC17F958D2ee523a2206206994597C13D831ec7'
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('totalSupply')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -190,7 +190,7 @@ describe('Test New Endponts', () => {
                 undefined,
                 undefined,
                 '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1')
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -200,7 +200,7 @@ describe('Test New Endponts', () => {
     it('Get Block Receipts', async () => {
         try {
             const object = await blast.builder.getBlockReceipts('0xc5043f')
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
@@ -211,11 +211,11 @@ describe('Test New Endponts', () => {
 
     it('Get Wallet Token Allowance', async () => {
         try {
-            const object = await blast.builder.getWalletTokenAllowance(
+            const object = await blast.builder.getWalletTokenAllowances(
                 '0xdAC17F958D2ee523a2206206994597C13D831ec7',
                 '0x499b7CF87bE5883b02b18d206eA23D05adA8F2f7',
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(RATE_LIMIT_ERROR);
@@ -227,7 +227,7 @@ describe('Test New Endponts', () => {
             const object = await blast.builder.getWalletTokenBalances(
                 '0x499b7CF87bE5883b02b18d206eA23D05adA8F2f7',
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(RATE_LIMIT_ERROR);
@@ -239,7 +239,7 @@ describe('Test New Endponts', () => {
             const object = await blast.builder.getWalletTokenHistory(
                 '0x499b7CF87bE5883b02b18d206eA23D05adA8F2f7',
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(RATE_LIMIT_ERROR);
@@ -251,7 +251,7 @@ describe('Test New Endponts', () => {
             const object = await blast.builder.getWalletTokenTransfers(
                 '0x499b7CF87bE5883b02b18d206eA23D05adA8F2f7',
             )
-            expect(object).to.be.a('object')
+            expect(object).to.have.property('count')
         }
         catch (err) {
             expect((err as Error).message).to.equal(RATE_LIMIT_ERROR);

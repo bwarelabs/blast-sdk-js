@@ -46,13 +46,11 @@ export class RequestsHandler {
         if (err?.message === RATE_LIMIT_ERROR || err?.code === RATE_LIMIT_CODE) {
             this.enqueue(request);
             returnValue = false;
+        } else if (!isBatch) {
+            console.error(err);
+            request.callback(err, undefined);
+            this.requestEvent[request.requestId].event.notify();
         }
-        else
-            if (!isBatch) {
-                console.error(err);
-                request.callback(err, undefined);
-                this.requestEvent[request.requestId].event.notify();
-            }
 
         return returnValue;
     }
