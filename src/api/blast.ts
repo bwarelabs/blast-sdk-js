@@ -36,7 +36,6 @@ export class Blast {
         }
 
         this.builder = new Builder(config);
-
         for (const notTypedFunc of Object.getOwnPropertyNames(Object.getPrototypeOf(this.builder))) {
             const func = notTypedFunc as keyof Builder;
             const type = typeof (this.builder[func]);
@@ -96,9 +95,7 @@ export class Blast {
                 return weakThis.requestEvent[requestId].response;
             }
         }
-
-        Object.defineProperty(descriptor, 'name', { value: originalFunction.name })
-        Object.defineProperty(descriptor, 'weight', { value: BUILDER_WEIGHTS[originalFunction.name] as number || 1 })
+        Object.defineProperty(originalFunction, 'weight', { value: BUILDER_WEIGHTS[originalFunction.name] as number || 1 })
         return descriptor;
     }
 

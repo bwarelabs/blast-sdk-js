@@ -224,8 +224,14 @@ describe('Test New Endponts', () => {
 
     it('Get Wallet Token Balances', async () => {
         try {
-            const object = await blast.builder.getWalletTokenBalances(
+            let object = await blast.builder.getWalletTokenBalances(
                 '0x499b7CF87bE5883b02b18d206eA23D05adA8F2f7',
+            )
+            expect(object).to.have.property('count')
+            // Test with contract addresses
+            object = await blast.builder.getWalletTokenBalances(
+                '0x539C92186f7C6CC4CbF443F26eF84C595baBBcA1',
+                ['0xc49f0591f8ffa4d9bd60addee9043d9073b37226', '0x9f77b4935193d49b8a3cab39fbb0c8c30af26461']
             )
             expect(object).to.have.property('count')
         }
