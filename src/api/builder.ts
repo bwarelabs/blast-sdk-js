@@ -4,19 +4,19 @@ import { BUILDER_WEIGHTS, BlastConfig, BlastNetwork } from "../utils/types";
 
 /** @internal */
 function getQueryString(params: Object) {
-    const queryString = Object.entries(params).reduce((acc: string[], [key, arg]) => {
-        if (arg) {
-            if (Array.isArray(arg)) {
-                arg.forEach((item: any) => {
-                    acc.push(`${key}[]=${item}`)
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+            if (Array.isArray(value)) {
+                value.forEach((item: any) => {
+                    queryParams.append(`${key}[]`, item.toString())
                 })
             } else {
-                acc.push(`${key}=${arg}`)
+                queryParams.append(key, value.toString())
             }
         }
-        return acc
-    }, [])
-    return queryString.join('&')
+    })
+    return queryParams
 }
 
 /** @internal */
