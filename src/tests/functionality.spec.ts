@@ -41,8 +41,10 @@ describe('Test functionality', () => {
                 if ((err as Error).message === "Internal error") {
                     continue
                 }
-                expect(isNetworkSupported(network)).to.be.false;
-                expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
+                else {
+                    expect(isNetworkSupported(network)).to.be.false;
+                    expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
+                }
             }
         }
     }).timeout(60000);
