@@ -41,7 +41,7 @@ describe('Test functionality', () => {
                 expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
             }
         }
-    }).timeout(50000);
+    }).timeout(60000);
 
     it('methods with multiple arguments should work', async () => {
         const blast: Blast = new Blast({

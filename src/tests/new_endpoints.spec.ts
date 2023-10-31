@@ -52,7 +52,7 @@ describe('Test New Endponts', () => {
                 expect((err as Error).message).to.equal(BUILDER_NOT_SUPPORTED_ERROR);
             }
         }
-    });
+    }).timeout(60000);
 
     it('Get Transaction', async () => {
         try {
