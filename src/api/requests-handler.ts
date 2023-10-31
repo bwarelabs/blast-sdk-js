@@ -1,10 +1,6 @@
 import { BlastSubscriptionPlan, HashMap, Request, RequestData } from "../utils/types";
 import { Queue } from "queue-typescript";
-<<<<<<< HEAD
-import { NOT_STARTED, RATE_LIMIT_CODE, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS } from "../utils/utils";
-=======
 import { BUILDER_NOT_SUPPORTED_ERROR, NOT_STARTED, RATE_LIMIT_CODE, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS } from "../utils/utils";
->>>>>>> bbcd918 (Added builder api and some tests)
 
 /** @internal */
 export class RequestsHandler {
