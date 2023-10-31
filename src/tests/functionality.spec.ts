@@ -37,7 +37,6 @@ describe('Test functionality', () => {
                 expect(+gas1).not.to.be.NaN;
                 expect(+gas2).not.to.be.NaN;
             } catch (err) {
-                console.log(network, " | ", isNetworkSupported(network), " | ", (err as Error).message);
                 expect(isNetworkSupported(network)).to.be.false;
                 expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
             }
