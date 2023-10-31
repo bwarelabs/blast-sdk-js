@@ -73,7 +73,7 @@ The SDK currently supports the following networks:
 - `SHIDEN_MAINNET`
 - `SHIDEN_SHIBUYA`
 
-4. Builder API
+## Builder API
 
 In order to use the new builder api create the blast config as above and run one of the blast methods
 ```js
