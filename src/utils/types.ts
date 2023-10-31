@@ -127,6 +127,7 @@ export interface Request {
 /** @internal */
 export interface RequestData {
     event: typeof Subject;
+    error: any;
     response: any;
 }
 

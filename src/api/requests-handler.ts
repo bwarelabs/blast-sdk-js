@@ -1,6 +1,10 @@
 import { BlastSubscriptionPlan, HashMap, Request, RequestData } from "../utils/types";
 import { Queue } from "queue-typescript";
+<<<<<<< HEAD
 import { NOT_STARTED, RATE_LIMIT_CODE, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS } from "../utils/utils";
+=======
+import { BUILDER_NOT_SUPPORTED_ERROR, NOT_STARTED, RATE_LIMIT_CODE, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS } from "../utils/utils";
+>>>>>>> bbcd918 (Added builder api and some tests)
 
 /** @internal */
 export class RequestsHandler {
@@ -42,11 +46,15 @@ export class RequestsHandler {
         // the return value is only used by requests in batches to determine
         // whether they should call their callbacks or not yet
         let returnValue: boolean = true;
-
         if (err?.message === RATE_LIMIT_ERROR || err?.code === RATE_LIMIT_CODE) {
             this.enqueue(request);
             returnValue = false;
         } else if (!isBatch) {
+            if (request.callback === null) {
+                this.requestEvent[request.requestId].error = err;
+                this.requestEvent[request.requestId].event.notify();
+                return true;
+            }
             console.error(err);
             request.callback(err, undefined);
             this.requestEvent[request.requestId].event.notify();
@@ -87,9 +95,12 @@ export class RequestsHandler {
 
                 request.originalFunction.apply(request.parent, request.arguments)
                     .then((response: any) => {
-                        request.callback(null, response);
                         this.requestEvent[request.requestId].response = response;
                         this.requestEvent[request.requestId].event.notify();
+                        if (request.callback === null) {
+                            return response
+                        }
+                        request.callback(null, response);
                     })
                     .catch((err: any) => this.handleErrors(request, err, false));
             }

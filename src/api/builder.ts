@@ -32,9 +32,11 @@ export class Builder {
     }
     /** @private */
     private async callBuilderApi(method: string, params: Object) {
+        // Build url
         const url = `${this.builderUrl}/${method}?${getQueryString(params)}`;
+        // Handle not supported error
         if (!isBuilderSupported(this.network)) {
-            throw new Error(BUILDER_NOT_SUPPORTED_ERROR);
+            throw new Error(BUILDER_NOT_SUPPORTED_ERROR)
         }
         const response = await fetch(url, fetchConfig);
         const result = await response.json();
