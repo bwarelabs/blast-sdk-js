@@ -200,7 +200,7 @@ describe('Test New Endponts', () => {
     it('Get Block Receipts', async () => {
         try {
             const object = await blast.builder.getBlockReceipts('0xc5043f')
-            expect(object).to.have.property('count')
+            expect(object).to.have.property('transactionCount')
         }
         catch (err) {
             expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
