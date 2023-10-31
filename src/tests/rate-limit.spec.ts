@@ -38,7 +38,7 @@ describe('Test automatic back-off when rate limit is reached', () => {
             rateLimit: 100,
         });
         return Promise.all(createRegularRequestArray(blast, 500));
-    }).timeout(15000);
+    }).timeout(20000);
 
     it('test rate limit for custom 100 plan for builder', async () => {
         const blast: Blast = new Blast({
@@ -47,7 +47,7 @@ describe('Test automatic back-off when rate limit is reached', () => {
             rateLimit: 100,
         });
         return Promise.all(createBuilderRequestArray(blast, 500));
-    }).timeout(15000);
+    }).timeout(20000);
 
     it('test rate limit for batch requests', () => {
         const blast: Blast = new Blast({

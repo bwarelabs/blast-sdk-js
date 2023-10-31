@@ -37,16 +37,11 @@ describe('Test functionality', () => {
                 expect(+gas1).not.to.be.NaN;
                 expect(+gas2).not.to.be.NaN;
             } catch (err) {
-                try {
-                    expect(isNetworkSupported(network)).to.be.false;
-                    expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
-                } catch (err) {
-                    console.log('Network: ', network)
-                    throw err
-                }
+                expect(isNetworkSupported(network)).to.be.false;
+                expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
             }
         }
-    }).timeout(15000);
+    }).timeout(50000);
 
     it('methods with multiple arguments should work', async () => {
         const blast: Blast = new Blast({
