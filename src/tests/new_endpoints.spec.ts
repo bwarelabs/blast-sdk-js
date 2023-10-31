@@ -1,7 +1,7 @@
-import { BlastConfig, BlastNetwork, BlastNetworkBuilderAPI, BlastSubscriptionPlan } from "../utils/types";
+import { BlastConfig, BlastNetwork, BlastNetworkBuilderAPI, BlastSubscriptionPlan, NotSupportedNetworks } from "../utils/types";
 import * as chai from "chai";
 import { Blast } from "../api/blast";
-import { fetchConfig, isNetworkSupported, NOT_SUPPORTED_ERROR, RATE_LIMIT_ERROR } from "../utils/utils";
+import { BUILDER_NOT_SUPPORTED_ERROR, fetchConfig, isBuilderSupported, isNetworkSupported, NOT_SUPPORTED_ERROR, RATE_LIMIT_ERROR } from "../utils/utils";
 import chaiAsPromised from "chai-as-promised";
 const { Subject } = require('await-notify');
 
@@ -29,6 +29,30 @@ describe('Test New Endponts', () => {
 
     beforeEach(() => new Promise((resolve) => setTimeout(resolve, 2000)));
     afterEach(() => { process.on = originalProcessOn });
+
+    it('Check Blast Builder API supported networks', async () => {
+        for (const network of Object.values(BlastNetwork)) {
+            // Skip unsupported networks
+            if (Object.values(NotSupportedNetworks).includes(network as unknown as NotSupportedNetworks)) {
+                continue
+            }
+
+            const config: BlastConfig = {
+                projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
+                network,
+                rateLimit: 100,
+            };
+
+            try {
+                const blast: Blast = new Blast(config);
+                const object = await blast.builder.getBlockTransactions('100000')
+                expect(object).to.have.property('blockNumber')
+            } catch (err) {
+                expect(isBuilderSupported(network)).to.be.false;
+                expect((err as Error).message).to.equal(BUILDER_NOT_SUPPORTED_ERROR);
+            }
+        }
+    });
 
     it('Get Transaction', async () => {
         try {
