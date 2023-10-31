@@ -38,7 +38,7 @@ describe('Test functionality', () => {
                 expect(+gas2).not.to.be.NaN;
             } catch (err) {
                 console.log(network, " | ", isNetworkSupported(network), " | ", (err as Error).message);
-                if ((err as Error).message === "Internal error") {
+                if ((err as Error).message === "Returned error: Internal error") {
                     continue
                 }
                 else {
