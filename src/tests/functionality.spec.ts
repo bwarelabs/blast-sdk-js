@@ -37,8 +37,8 @@ describe('Test functionality', () => {
                 expect(+gas1).not.to.be.NaN;
                 expect(+gas2).not.to.be.NaN;
             } catch (err) {
-                if ((err as Error)?.message === "Internal error") {
-                    console.log(network, " | ", isNetworkSupported(network), " | ", (err as Error).message);
+                console.log(network, " | ", isNetworkSupported(network), " | ", (err as Error).message);
+                if ((err as Error).message === "Internal error") {
                     continue
                 }
                 expect(isNetworkSupported(network)).to.be.false;
