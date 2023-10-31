@@ -1,6 +1,6 @@
-import {BlastSubscriptionPlan, HashMap, Request, RequestData} from "../utils/types";
-import {Queue} from "queue-typescript";
-import {NOT_STARTED, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS} from "../utils/utils";
+import { BlastSubscriptionPlan, HashMap, Request, RequestData } from "../utils/types";
+import { Queue } from "queue-typescript";
+import { NOT_STARTED, RATE_LIMIT_CODE, RATE_LIMIT_ERROR, WINDOW_LENGTH_IN_MILLISECONDS } from "../utils/utils";
 
 /** @internal */
 export class RequestsHandler {
@@ -43,7 +43,7 @@ export class RequestsHandler {
         // whether they should call their callbacks or not yet
         let returnValue: boolean = true;
 
-        if (err?.message === RATE_LIMIT_ERROR) {
+        if (err?.message === RATE_LIMIT_ERROR || err?.code === RATE_LIMIT_CODE) {
             this.enqueue(request);
             returnValue = false;
         } else if (!isBatch) {
@@ -64,7 +64,7 @@ export class RequestsHandler {
 
         while (this.queue.length > 0) {
             const request: Request = this.queue.dequeue();
-            let numberOfSubRequests: number = 1;
+            let numberOfSubRequests: number = request.originalFunction.weight;
 
             if (request.parent.requests !== undefined) {
                 // if parent is BatchRequest
@@ -123,12 +123,12 @@ export class RequestsHandler {
 
         if (scale * this.previousWindowNumberOfRequests +
             (this.currentWindowNumberOfRequests + numberOfRequests) > this.plan) {
-                await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(numberOfRequests, currentTime))));
+            await new Promise(resolve => setTimeout(resolve, Math.ceil(this.timeToWaitForNewRequest(numberOfRequests, currentTime))));
 
-                // we moved to a different window, so we need to do the processing again
-                await this.handleRateLimit(numberOfRequests);
-                return;
-            }
+            // we moved to a different window, so we need to do the processing again
+            await this.handleRateLimit(numberOfRequests);
+            return;
+        }
         // add current request to the number of requests
         this.currentWindowNumberOfRequests += numberOfRequests;
     }

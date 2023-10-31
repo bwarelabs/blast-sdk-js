@@ -1,9 +1,9 @@
-import {BlastConfig, BlastNetwork} from "../utils/types";
+import { BlastConfig, BlastNetwork } from "../utils/types";
 import * as chai from "chai";
-import {Blast} from "../api/blast";
-import {isNetworkSupported, NOT_SUPPORTED_ERROR, RATE_LIMIT_ERROR} from "../utils/utils";
+import { Blast } from "../api/blast";
+import { isNetworkSupported, NOT_SUPPORTED_ERROR, RATE_LIMIT_ERROR } from "../utils/utils";
 import chaiAsPromised from "chai-as-promised";
-const {Subject} = require('await-notify');
+const { Subject } = require('await-notify');
 
 describe('Test functionality', () => {
     let expect: Chai.ExpectStatic;
@@ -18,7 +18,7 @@ describe('Test functionality', () => {
 
     // wait for the sliding window to clear up
     beforeEach(() => new Promise((resolve) => setTimeout(resolve, 2000)));
-    afterEach(() => {process.on = originalProcessOn});
+    afterEach(() => { process.on = originalProcessOn });
 
     it('supported networks should work both on https and wss while not supported networks should not', async () => {
         for (const network of Object.values(BlastNetwork)) {
@@ -41,7 +41,7 @@ describe('Test functionality', () => {
                 expect((err as Error).message).to.equal(NOT_SUPPORTED_ERROR);
             }
         }
-    }).timeout(15000);
+    }).timeout(50000);
 
     it('methods with multiple arguments should work', async () => {
         const blast: Blast = new Blast({

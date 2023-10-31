@@ -1,17 +1,22 @@
 import Web3 from "web3";
-import {getBlastUrl, isNetworkSupported, NOT_SUPPORTED_ERROR} from "../utils/utils";
-import {BlastConfig, HashMap, RequestData} from "../utils/types";
-import {Eth} from "web3-eth";
-import {RequestsHandler} from "./requests-handler";
-import {v4 as uuidv4} from "uuid";
-const {Subject} = require('await-notify');
+import { getBlastUrl, isNetworkSupported, NOT_SUPPORTED_ERROR } from "../utils/utils";
+import { BlastConfig, HashMap, RequestData, BUILDER_WEIGHTS } from "../utils/types";
+import { Eth } from "web3-eth";
+import { RequestsHandler } from "./requests-handler";
+import { v4 as uuidv4 } from "uuid";
+import { Builder } from "./builder";
+const { Subject } = require('await-notify');
 
 /** @public */
 export class Blast {
+
     readonly apiProvider: Web3;
     readonly wsProvider: Web3;
+
     private readonly requestEvent: HashMap<RequestData>;
     private requestsHandler: RequestsHandler | undefined;
+
+    public readonly builder: Builder;
 
     /** @public */
     constructor(config: BlastConfig) {
@@ -29,17 +34,31 @@ export class Blast {
             this.wrapProviderToHandleRequestLimit(this.apiProvider);
             this.wrapProviderToHandleRequestLimit(this.wsProvider);
         }
+
+        this.builder = new Builder(config);
+        if (config.rateLimit !== undefined) {
+            for (const notTypedFunc of Object.getOwnPropertyNames(Object.getPrototypeOf(this.builder))) {
+                const func = notTypedFunc as keyof Builder;
+                const type = typeof (this.builder[func]);
+
+                if (type === 'function') {
+                    // @ts-ignore
+                    this.builder[func] = this.overrideFunctionToHandleRequestLimit(this.builder, this.builder[func]);
+                }
+            }
+        }
     }
 
     /** @internal */
     private overrideFunctionToHandleRequestLimit(parent: any, originalFunction: any) {
         const weakThis = this;
-        return async function () {
+
+        const descriptor = async function () {
             const requestId = uuidv4();
-            weakThis.requestEvent[requestId] = {event: new Subject(), response: undefined};
+            weakThis.requestEvent[requestId] = { event: new Subject(), response: undefined };
 
             let argumentsWithoutCallback = Array.from(arguments);
-            let callback = () => {};
+            let callback = () => { };
 
             if (arguments.length > 0) {
                 const callbackFromArguments = arguments[arguments.length - 1];
@@ -78,6 +97,8 @@ export class Blast {
                 return weakThis.requestEvent[requestId].response;
             }
         }
+        Object.defineProperty(originalFunction, 'weight', { value: BUILDER_WEIGHTS[originalFunction.name] as number || 1 })
+        return descriptor;
     }
 
     /** @internal */

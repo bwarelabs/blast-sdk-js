@@ -1,4 +1,4 @@
-const {Subject} = require('await-notify');
+const { Subject } = require('await-notify');
 
 /** @internal */
 export type ConnectionType = 'https' | 'wss';
@@ -49,6 +49,22 @@ export enum BlastNetwork {
     PALM_MAINNET = 'palm-mainnet',
     PALM_TESTNET = 'palm-testnet',
     EVMOS_MAINNET = 'evmos-mainnet',
+    // new supported networks
+    ARBITUM_ONE = 'arbitrum-one',
+    ARBITUM_GOERLI = 'arbitrum-goerli',
+    ARBITUM_SEPOLIA = 'arbitrum-sepolia',
+    ARBITUM_NOVA = 'arbitrum-nova',
+    SCROLL_MAINNET = 'scroll-mainnet',
+    SCROLL_ALPHANET = 'scroll-alphanet',
+    SCROLL_SEPOLIA = 'scroll-sepolia',
+    BASE_MAINNET = 'base-mainnet',
+    BASE_GOERLI = 'base-goerli',
+    METIS_MAINNET = 'metis-mainnet',
+    OKTC_MAINNET = 'oktc-mainnet',
+    MANTLE_MAINNET = 'mantle-mainnet',
+    MANTLE_GOERLI = 'mantle-goerli',
+    LINEA_MAINNET = 'linea-mainnet',
+    LINEA_GOERLI = 'linea-goerli',
     // not supported networks only below
     // make sure that the list below is on part with the |NotSupportedNetworks| enum below
     STARKNET_TESTNET = 'starknet-testnet',
@@ -61,6 +77,15 @@ export enum BlastNetwork {
     ELROND_MAINNET_GATEWAY = 'elrond-mainnet',
     APTOS_MAINNET = 'aptos-mainnet',
     APTOS_TESTNET = 'aptos-testnet',
+    SUI_MAINNET = 'sui-mainnet',
+    SUI_TESTNET = 'sui-testnet',
+}
+/** @public */
+export enum BlastNetworkBuilderAPI {
+    ETH_MAINNET = 'eth-mainnet',
+    OPTIMISM_MAINNET = 'optimism-mainnet',
+    ARBITUM_ONE = 'arbitrum-one',
+    BASE_MAINNET = 'base-mainnet',
 }
 
 // make sure that all the enum entries below also exist in the |BlastNetwork| enum above
@@ -76,6 +101,8 @@ export enum NotSupportedNetworks {
     ELROND_MAINNET_GATEWAY = 'elrond-mainnet',
     APTOS_MAINNET = 'aptos-mainnet',
     APTOS_TESTNET = 'aptos-testnet',
+    SUI_MAINNET = 'sui-mainnet',
+    SUI_TESTNET = 'sui-testnet',
 }
 
 /**
@@ -106,4 +133,25 @@ export interface RequestData {
 /** @internal */
 export interface HashMap<T> {
     [key: string]: T;
+}
+
+/** @internal */
+export const BUILDER_WEIGHTS: { [key: string]: number } = {
+    'getTransaction': 1,
+    'getBlockTransactions': 2,
+    'getTokenMetadata': 1,
+    'getTokenTransfers': 2,
+    'getTokenMints': 1,
+    'getTokenBurns': 2,
+    'getTokenHolders': 3,
+    'getTokenAllowance': 1,
+    'getTokenApprovals': 2,
+    'getTokenSupply': 1,
+    'getLogs': 5,
+    'getBlockReceipts': 3,
+    'getWalletTokenAllowance': 4,
+    'getWalletTokenBalances': 4,
+    'getWalletTokenHistory': 5,
+    'getWalletTokenTransfers': 4,
+    'getWalletTransactions': 4,
 }
