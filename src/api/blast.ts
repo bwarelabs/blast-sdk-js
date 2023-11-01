@@ -55,10 +55,10 @@ export class Blast {
 
         const descriptor = async function () {
             const requestId = uuidv4();
-            weakThis.requestEvent[requestId] = { event: new Subject(), response: undefined };
+            weakThis.requestEvent[requestId] = { event: new Subject(), error: undefined, response: undefined };
 
             let argumentsWithoutCallback = Array.from(arguments);
-            let callback = () => { };
+            let callback = null;
 
             if (arguments.length > 0) {
                 const callbackFromArguments = arguments[arguments.length - 1];
@@ -94,6 +94,9 @@ export class Blast {
             if (parent.requests === undefined) {
                 // parent is Eth, not BatchRequest
                 await weakThis.requestEvent[requestId].event.wait();
+                if (weakThis.requestEvent[requestId].error !== undefined) {
+                    throw weakThis.requestEvent[requestId].error;
+                }
                 return weakThis.requestEvent[requestId].response;
             }
         }
