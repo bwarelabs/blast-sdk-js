@@ -29,7 +29,7 @@
     "queue-typescript": "^1.0.1",
     "ts-node": "^10.9.1",
     "uuid": "^9.0.0",
-    "web3": "^1.8.1",
+    "web3": "^4.2.1",
     "web3-eth": "^1.8.0",
     "web3-providers-ws": "^1.8.0"
   }
