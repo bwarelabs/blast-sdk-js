@@ -18,7 +18,7 @@ describe('Test New Endponts', () => {
         originalProcessOn = process.on;
 
         const config: BlastConfig = {
-            projectId: "20f97175-3584-43b4-8d13-6c1786d24cf2",
+            projectId: process.env.PROJECT_ID_CUSTOM_PLAN_100 as string,
             network: BlastNetwork.ETH_MAINNET,
             rateLimit: BlastSubscriptionPlan.Free
         }
