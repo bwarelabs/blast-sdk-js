@@ -108,6 +108,10 @@ export class Blast {
     private wrapFunctionToHandleRequestLimit(provider: Web3, func: keyof Eth) {
         const originalFunction = provider.eth[func];
 
+        // Skip subscribe function because it is handled differently
+        if (func === 'subscribe' || func === 'clearSubscriptions') {
+            return
+        }
         // @ts-ignore because it believes that func can be a property and not a function of the Eth class
         provider.eth[func] = this.overrideFunctionToHandleRequestLimit(provider.eth, originalFunction);
 

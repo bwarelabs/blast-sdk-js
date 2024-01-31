@@ -55,7 +55,6 @@ export enum BlastNetwork {
     ARBITUM_SEPOLIA = 'arbitrum-sepolia',
     ARBITUM_NOVA = 'arbitrum-nova',
     SCROLL_MAINNET = 'scroll-mainnet',
-    SCROLL_ALPHANET = 'scroll-alphanet',
     SCROLL_SEPOLIA = 'scroll-sepolia',
     BASE_MAINNET = 'base-mainnet',
     BASE_GOERLI = 'base-goerli',
