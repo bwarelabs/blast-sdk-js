@@ -30,7 +30,7 @@ describe('Test functionality', () => {
 
             try {
                 const blast: Blast = new Blast(config);
-
+                console.log(network, " | ", isNetworkSupported(network));
                 const gas1 = await blast.apiProvider.eth.getGasPrice();
                 const gas2 = await blast.wsProvider.eth.getGasPrice();
 
