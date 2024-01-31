@@ -14,7 +14,7 @@
   },
   "scripts": {
     "custom-test": "ts-node-esm -r dotenv/config test.ts",
-    "test": "mocha -r dotenv/config --exit --timeout 5000",
+    "test": "mocha -r dotenv/config --require @babel/register --exit --timeout 5000",
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
