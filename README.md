@@ -86,7 +86,7 @@ const blast = new Blast(config);
 ```
 
 ```js
-const result = await blast.builder.getTransaction('0x067ce4942cb3c65fe74e21063c35f786eb666712ba5d074d2dff56a6d28c1ba3')
+const result = await blast.builder.getTransaction('0xFa1dB6794de6e994b60741DecaE0567946992181')
 console.log(result)
 ```
 
